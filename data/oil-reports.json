@@ -1,0 +1,78 @@
+{
+  "updatedAt": "2026-06-17T14:30:00+07:00",
+  "reports": {
+    "08-GB0079": {
+      "actualReport": true,
+      "sampleNumber": "810177611",
+      "sampleDate": "19.03.2025",
+      "sampleReceived": "06.06.2025",
+      "sampleCompleted": "06.06.2025",
+      "lubricant": "Omala S2 GX 320",
+      "registeredLubricant": "Shell - Omala S2 GX 320",
+      "equipmentLife": "26,665 hr",
+      "lubricantLife": "10,000 hr",
+      "status": "monitor",
+      "health": 70,
+      "iso": "20/19/17",
+      "particleScore": 86,
+      "viscosity": 302.2,
+      "viscosity100": 28.2,
+      "viscosityIndex": 125,
+      "wear": 6,
+      "feDisplay": "<6",
+      "cuDisplay": "<10",
+      "water": 0.05,
+      "waterDisplay": "<0.2",
+      "tan": 0,
+      "tanDisplay": "-",
+      "sodium": "<10",
+      "silicon": "<5",
+      "phosphorus": "360",
+      "oxidation": "0.000",
+      "particleCounts": {
+        ">4µ": "8,831",
+        ">6µ": "3,142",
+        ">14µ": "1,200",
+        ">21µ": "977",
+        ">38µ": "581",
+        ">70µ": "308"
+      },
+      "diagnosis": "Particle count increased at >21, >38 and >70 micron. ISO Particle Count is severe. Recommend portable filtration or lubricant/filter change if not done at sampling time.",
+      "nextAction": "กรองน้ำมัน",
+      "trend": {
+        "months": ["Jun 23", "Sep 23", "Nov 23", "Jan 24", "Mar 25"],
+        "physicalOxidation": [80, 66, 89, 80, 80],
+        "wear": [18, 52, 32, 18, 18],
+        "particleContamination": [56, 68, 72, 78, 86],
+        "waterContamination": [22, 26, 31, 34, 38],
+        "particles": [56, 68, 72, 78, 86],
+        "viscosity": [80, 66, 89, 80, 80],
+        "subTrends": {
+          "physicalOxidation": [
+            { "label": "Viscosity 40°C", "unit": "cSt", "color": "#1456a0", "values": [315, 278, 330, 305, 302.2] },
+            { "label": "Viscosity 100°C", "unit": "cSt", "color": "#087f83", "values": [29.5, 26.8, 30.4, 28.7, 28.2] },
+            { "label": "Viscosity Index", "unit": "", "color": "#b87503", "values": [129, 122, 132, 126, 125] }
+          ],
+          "wear": [
+            { "label": "Iron [Fe]", "unit": "ppm", "color": "#b42318", "values": [8, 18, 12, 7, 6] },
+            { "label": "Chromium [Cr]", "unit": "ppm", "color": "#7c3aed", "values": [1, 2, 1, 1, 1] },
+            { "label": "Tin [Sn]", "unit": "ppm", "color": "#0f766e", "values": [0, 1, 1, 0, 0] },
+            { "label": "Lead [Pb]", "unit": "ppm", "color": "#92400e", "values": [2, 4, 3, 2, 1] },
+            { "label": "Copper [Cu]", "unit": "ppm", "color": "#d97706", "values": [12, 28, 18, 11, 10] },
+            { "label": "Nickel [Ni]", "unit": "ppm", "color": "#475569", "values": [0, 1, 1, 0, 0] },
+            { "label": "Aluminium [Al]", "unit": "ppm", "color": "#0284c7", "values": [3, 5, 4, 3, 2] }
+          ],
+          "particleContamination": [
+            { "label": "Water (%)", "unit": "%", "color": "#087f83", "values": [0.04, 0.05, 0.06, 0.05, 0.05] },
+            { "label": "Silicon [Si]", "unit": "ppm", "color": "#b87503", "values": [4, 5, 5, 4, 5] }
+          ],
+          "waterContamination": [
+            { "label": "Water (%)", "unit": "%", "color": "#087f83", "values": [0.04, 0.05, 0.06, 0.05, 0.05] },
+            { "label": "Silicon [Si]", "unit": "ppm", "color": "#b87503", "values": [4, 5, 5, 4, 5] }
+          ]
+        },
+        "health": 70
+      }
+    }
+  }
+}
