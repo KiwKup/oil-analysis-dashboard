@@ -1,0 +1,2780 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Oil Analysis Executive Dashboard</title>
+  <style>
+    :root {
+      --bg: #f4f7fb;
+      --panel: #ffffff;
+      --ink: #142033;
+      --muted: #68778f;
+      --line: #dce5f1;
+      --blue: #1456a0;
+      --teal: #087f83;
+      --green: #1b8a5a;
+      --amber: #b87503;
+      --red: #b42318;
+      --blue-soft: #eaf2fb;
+      --teal-soft: #e7f6f6;
+      --green-soft: #e8f6ee;
+      --amber-soft: #fff3da;
+      --red-soft: #ffe9e6;
+      --shadow: 0 14px 34px rgba(28, 43, 64, .1);
+      --radius: 8px;
+      font-family: "Segoe UI", Tahoma, Arial, sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      background:
+        linear-gradient(180deg, rgba(20, 86, 160, .08), rgba(244, 247, 251, 0) 360px),
+        var(--bg);
+    }
+
+    button, input, select { font: inherit; }
+
+    .app { min-height: 100vh; }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      padding: 14px clamp(18px, 3vw, 34px);
+      border-bottom: 1px solid rgba(220, 229, 241, .84);
+      background: rgba(244, 247, 251, .92);
+      backdrop-filter: blur(16px);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      min-width: 0;
+      gap: 12px;
+    }
+
+    .mark {
+      display: grid;
+      place-items: center;
+      width: 42px;
+      height: 42px;
+      flex: 0 0 auto;
+      color: #fff;
+      border-radius: var(--radius);
+      background: linear-gradient(135deg, var(--blue), var(--teal));
+      box-shadow: 0 8px 20px rgba(20, 86, 160, .22);
+    }
+
+    h1, h2, h3, p { margin-top: 0; }
+
+    .brand h1 {
+      margin: 0;
+      font-size: clamp(18px, 2.2vw, 28px);
+      line-height: 1.15;
+      letter-spacing: 0;
+    }
+
+    .brand p {
+      margin: 3px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .it-brand {
+      gap: 14px;
+      padding: 2px 0;
+    }
+
+    .it-emblem {
+      position: relative;
+      display: grid;
+      place-items: center;
+      width: 58px;
+      height: 58px;
+      flex: 0 0 auto;
+      border: 4px solid #f25a13;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, .58);
+      color: #f25a13;
+      font-weight: 950;
+      box-shadow: 0 8px 20px rgba(242, 90, 19, .14);
+    }
+
+    .it-emblem::before {
+      content: "";
+      position: absolute;
+      inset: 5px;
+      border: 3px solid #f25a13;
+      border-radius: 50%;
+    }
+
+    .it-emblem span {
+      position: relative;
+      z-index: 1;
+      font-size: 24px;
+      line-height: 1;
+      letter-spacing: 0;
+    }
+
+    .it-copy {
+      display: grid;
+      gap: 2px;
+      min-width: 0;
+    }
+
+    .it-name {
+      color: #0f172a;
+      font-size: clamp(22px, 2.8vw, 36px);
+      font-weight: 950;
+      line-height: .95;
+      letter-spacing: .18em;
+      white-space: nowrap;
+    }
+
+    .it-development {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: baseline;
+      gap: 8px;
+      color: #111827;
+      font-size: clamp(13px, 1.4vw, 18px);
+      font-weight: 900;
+      line-height: 1.1;
+    }
+
+    .it-development strong {
+      color: #f25a13;
+      letter-spacing: .08em;
+    }
+
+    .it-project {
+      color: #111827;
+      font-size: clamp(13px, 1.4vw, 18px);
+      font-weight: 650;
+      line-height: 1.2;
+      letter-spacing: .02em;
+      white-space: nowrap;
+    }
+
+    .top-actions {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    .sync-status {
+      display: inline-flex;
+      align-items: center;
+      min-height: 38px;
+      padding: 0 10px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #fff;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 850;
+      box-shadow: 0 6px 18px rgba(28, 43, 64, .06);
+    }
+
+    .sync-status.live {
+      color: var(--green);
+      background: var(--green-soft);
+      border-color: rgba(27, 138, 90, .18);
+    }
+
+    .sync-status.warn {
+      color: var(--amber);
+      background: var(--amber-soft);
+      border-color: rgba(184, 117, 3, .18);
+    }
+
+    .icon-btn,
+    .text-btn,
+    .seg-btn,
+    .machine-tile,
+    .link-btn {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel);
+      color: var(--ink);
+      cursor: pointer;
+      transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease, background .18s ease;
+    }
+
+    .icon-btn,
+    .text-btn,
+    .seg-btn {
+      height: 38px;
+      box-shadow: 0 6px 18px rgba(28, 43, 64, .06);
+    }
+
+    .icon-btn {
+      display: grid;
+      place-items: center;
+      width: 38px;
+    }
+
+    .text-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 0 12px;
+      font-weight: 800;
+    }
+
+    .icon-btn:hover,
+    .text-btn:hover,
+    .machine-tile:hover,
+    .link-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: var(--shadow);
+    }
+
+    main {
+      width: min(1520px, 100%);
+      margin: 0 auto;
+      padding: 24px clamp(16px, 3vw, 34px) 44px;
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1.18fr) minmax(360px, .82fr);
+      align-items: stretch;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    .hero-main {
+      position: relative;
+      overflow: hidden;
+      min-height: 238px;
+      padding: clamp(22px, 2.7vw, 32px);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background:
+        linear-gradient(135deg, rgba(20, 86, 160, .9), rgba(8, 127, 131, .84)),
+        #12385d;
+      color: #fff;
+      box-shadow: var(--shadow);
+    }
+
+    .hero-main::after {
+      content: "";
+      position: absolute;
+      inset: auto -18px -34px auto;
+      width: min(520px, 58vw);
+      height: 200px;
+      background:
+        radial-gradient(circle at 18% 52%, rgba(255, 255, 255, .18) 0 8px, transparent 9px),
+        linear-gradient(12deg, rgba(255, 255, 255, .16), rgba(255, 255, 255, .03));
+      clip-path: polygon(0 64%, 12% 34%, 34% 38%, 47% 12%, 70% 20%, 82% 2%, 100% 26%, 100% 100%, 0 100%);
+      opacity: .72;
+    }
+
+    .hero-main h2 {
+      position: relative;
+      z-index: 1;
+      max-width: 780px;
+      margin-bottom: 28px;
+      font-size: clamp(30px, 4.4vw, 54px);
+      line-height: .98;
+      letter-spacing: 0;
+    }
+
+    .hero-chips {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 9px;
+    }
+
+    .hero-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      min-height: 32px;
+      padding: 6px 10px;
+      border: 1px solid rgba(255, 255, 255, .2);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, .12);
+      color: rgba(255, 255, 255, .92);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .summary-panel {
+      display: grid;
+      gap: 12px;
+    }
+
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .panel,
+    .kpi,
+    .group-section,
+    .machine-tile,
+    .priority-panel,
+    .detail-shell {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel);
+      box-shadow: 0 8px 22px rgba(28, 43, 64, .055);
+    }
+
+    .kpi {
+      min-width: 0;
+      padding: 16px;
+    }
+
+    .kpi .label,
+    .eyebrow {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 850;
+      letter-spacing: 0;
+      text-transform: uppercase;
+    }
+
+    .kpi .value {
+      margin-top: 9px;
+      font-size: clamp(26px, 4vw, 42px);
+      font-weight: 900;
+      line-height: 1;
+    }
+
+    .kpi .sub {
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.4;
+    }
+
+    .bar-track {
+      height: 7px;
+      margin-top: 14px;
+      overflow: hidden;
+      border-radius: 999px;
+      background: #edf2f7;
+    }
+
+    .bar-fill {
+      display: block;
+      height: 100%;
+      border-radius: 999px;
+      background: linear-gradient(90deg, var(--blue), var(--teal));
+    }
+
+    .toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin: 14px 0 16px;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(255, 255, 255, .75);
+    }
+
+    .searchbox {
+      position: relative;
+      flex: 1 1 280px;
+      min-width: 180px;
+    }
+
+    .searchbox svg {
+      position: absolute;
+      left: 11px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--muted);
+    }
+
+    .searchbox input {
+      width: 100%;
+      height: 38px;
+      padding: 0 12px 0 38px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #fff;
+      color: var(--ink);
+      outline: none;
+    }
+
+    .searchbox input:focus {
+      border-color: rgba(20, 86, 160, .68);
+      box-shadow: 0 0 0 3px rgba(20, 86, 160, .12);
+    }
+
+    .segments {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+      justify-content: flex-end;
+    }
+
+    .seg-btn {
+      min-width: 72px;
+      padding: 0 11px;
+      font-size: 12px;
+      font-weight: 850;
+    }
+
+    .seg-btn.active {
+      border-color: rgba(20, 86, 160, .5);
+      background: var(--blue-soft);
+      color: var(--blue);
+    }
+
+    .fleet-grid {
+      display: grid;
+      gap: 14px;
+    }
+
+    .group-section {
+      padding: 16px;
+    }
+
+    .group-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      margin-bottom: 12px;
+    }
+
+    .group-head h3 {
+      margin: 0;
+      font-size: 18px;
+      line-height: 1.25;
+      letter-spacing: 0;
+    }
+
+    .group-head p {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .group-count {
+      flex: 0 0 auto;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 850;
+    }
+
+    .machine-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(174px, 1fr));
+      gap: 10px;
+    }
+
+    .machine-tile {
+      min-height: 126px;
+      padding: 12px;
+      text-align: left;
+      box-shadow: none;
+    }
+
+    .machine-tile.active {
+      border-color: rgba(20, 86, 160, .62);
+      box-shadow: 0 16px 28px rgba(20, 86, 160, .13);
+    }
+
+    .tile-head {
+      display: flex;
+      align-items: start;
+      justify-content: space-between;
+      gap: 8px;
+      min-height: 30px;
+    }
+
+    .machine-name {
+      font-size: 20px;
+      font-weight: 900;
+      line-height: 1.05;
+      word-break: break-word;
+    }
+
+    .status-badge,
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      width: max-content;
+      max-width: 100%;
+      min-height: 24px;
+      padding: 0 8px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    .status-normal,
+    .tag.normal {
+      color: var(--green);
+      background: var(--green-soft);
+    }
+
+    .status-monitor,
+    .tag.monitor {
+      color: var(--amber);
+      background: var(--amber-soft);
+    }
+
+    .status-critical,
+    .tag.critical {
+      color: var(--red);
+      background: var(--red-soft);
+    }
+
+    .tile-meta {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1.18fr);
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .tile-meta span {
+      display: grid;
+      gap: 2px;
+      min-width: 0;
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.2;
+    }
+
+    .tile-meta b {
+      color: var(--ink);
+      font-size: 13px;
+      line-height: 1.2;
+    }
+
+    .tile-state {
+      display: inline-flex;
+      align-items: center;
+      width: max-content;
+      max-width: 100%;
+      min-height: 22px;
+      padding: 0 7px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    .tile-meter {
+      height: 6px;
+      margin-top: 12px;
+      overflow: hidden;
+      border-radius: 999px;
+      background: #edf2f7;
+    }
+
+    .tile-meter i {
+      display: block;
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--blue), var(--teal));
+    }
+
+    .priority-panel {
+      margin-top: 16px;
+      padding: 16px;
+    }
+
+    .section-head {
+      display: flex;
+      align-items: start;
+      justify-content: space-between;
+      gap: 14px;
+      margin-bottom: 12px;
+    }
+
+    .section-head h3 {
+      margin: 0;
+      font-size: 18px;
+      line-height: 1.25;
+    }
+
+    .section-head p {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .table-wrap {
+      overflow: auto;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+    }
+
+    table {
+      width: 100%;
+      min-width: 780px;
+      border-collapse: collapse;
+      background: #fff;
+    }
+
+    th, td {
+      padding: 12px 13px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      font-size: 13px;
+      white-space: nowrap;
+    }
+
+    th {
+      color: var(--muted);
+      background: #f8fafc;
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    tr:last-child td { border-bottom: 0; }
+
+    .link-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      min-height: 30px;
+      padding: 0 9px;
+      font-weight: 850;
+      box-shadow: none;
+    }
+
+    .detail-shell {
+      margin-top: 18px;
+      overflow: hidden;
+    }
+
+    .detail-banner {
+      display: grid;
+      grid-template-columns: minmax(0, 1.2fr) minmax(340px, .8fr);
+      gap: 16px;
+      padding: clamp(18px, 2.4vw, 26px);
+      background:
+        linear-gradient(135deg, rgba(20, 86, 160, .08), rgba(8, 127, 131, .08)),
+        #fff;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .detail-title {
+      display: flex;
+      align-items: start;
+      justify-content: space-between;
+      gap: 14px;
+    }
+
+    .detail-title h2 {
+      margin: 5px 0 8px;
+      font-size: clamp(32px, 4.5vw, 56px);
+      line-height: .98;
+      letter-spacing: 0;
+    }
+
+    .detail-title p {
+      max-width: 760px;
+      margin-bottom: 0;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.55;
+    }
+
+    .detail-kpis {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .detail-body {
+      display: grid;
+      grid-template-columns: minmax(0, 1.38fr) minmax(330px, .72fr);
+      gap: 16px;
+      padding: 16px;
+    }
+
+    .panel {
+      padding: 16px;
+    }
+
+    .detail-body > div > .panel + .panel {
+      margin-top: 16px;
+    }
+
+    .panel h3 {
+      margin: 0;
+      font-size: 18px;
+      line-height: 1.25;
+    }
+
+    .panel p {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .trend-area {
+      min-height: 334px;
+      padding-top: 8px;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 300px;
+    }
+
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px 18px;
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .legend span {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--blue);
+    }
+
+    .dot.teal { background: var(--teal); }
+    .dot.amber { background: var(--amber); }
+    .dot.red { background: var(--red); }
+
+    .mini-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .mini-card {
+      display: grid;
+      gap: 8px;
+      min-height: 84px;
+      padding: 13px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #fbfcff;
+    }
+
+    .mini-card > span {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 850;
+      line-height: 1.25;
+    }
+
+    .mini-card strong {
+      font-size: 22px;
+      line-height: 1;
+    }
+
+    .mini-card small {
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 800;
+      line-height: 1.2;
+    }
+
+    .gearbox-summary {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(280px, .82fr);
+      gap: 12px;
+      margin-bottom: 12px;
+      padding: 13px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #fbfcff;
+    }
+
+    .gearbox-summary h4 {
+      margin: 4px 0 6px;
+      font-size: 20px;
+      line-height: 1.2;
+    }
+
+    .gearbox-summary p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .gearbox-meta {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .gearbox-meta span {
+      display: grid;
+      gap: 3px;
+      min-height: 48px;
+      padding: 8px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #fff;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 800;
+    }
+
+    .gearbox-meta b {
+      color: var(--ink);
+      font-size: 13px;
+      line-height: 1.2;
+      word-break: break-word;
+    }
+
+    .gearbox-meta .wide {
+      grid-column: 1 / -1;
+    }
+
+    .gearbox-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+      gap: 9px;
+    }
+
+    .gearbox-card {
+      min-height: 82px;
+      padding: 11px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #fff;
+      color: var(--ink);
+      text-align: left;
+      cursor: pointer;
+      transition: border-color .18s ease, box-shadow .18s ease, transform .18s ease;
+    }
+
+    .gearbox-card:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 10px 22px rgba(28, 43, 64, .08);
+    }
+
+    .gearbox-card.active {
+      border-color: rgba(20, 86, 160, .58);
+      background: linear-gradient(180deg, #fff, #f6fbff);
+      box-shadow: 0 14px 26px rgba(20, 86, 160, .12);
+    }
+
+    .gearbox-card strong {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 14px;
+      line-height: 1.25;
+    }
+
+    .gearbox-card small {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 800;
+    }
+
+    .risk-list,
+    .recommendation-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .risk-item,
+    .recommendation {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #fff;
+    }
+
+    .risk-item {
+      display: grid;
+      grid-template-columns: 42px minmax(0, 1fr) auto;
+      gap: 12px;
+      align-items: center;
+      padding: 12px;
+    }
+
+    .risk-icon {
+      display: grid;
+      place-items: center;
+      width: 42px;
+      height: 42px;
+      border-radius: var(--radius);
+      color: #fff;
+      background: var(--blue);
+    }
+
+    .risk-icon.normal { background: var(--green); }
+    .risk-icon.monitor { background: var(--amber); }
+    .risk-icon.critical { background: var(--red); }
+
+    .risk-title {
+      font-weight: 900;
+      line-height: 1.25;
+    }
+
+    .risk-detail {
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.4;
+    }
+
+    .score {
+      min-width: 64px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 900;
+      text-align: right;
+    }
+
+    .recommendation {
+      padding: 13px;
+    }
+
+    .recommendation b {
+      display: block;
+      margin-bottom: 5px;
+      font-size: 14px;
+    }
+
+    .recommendation span {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .footnote {
+      margin: 14px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .empty-state {
+      padding: 22px;
+      border: 1px dashed var(--line);
+      border-radius: var(--radius);
+      color: var(--muted);
+      background: rgba(255, 255, 255, .72);
+      text-align: center;
+      font-size: 13px;
+    }
+
+    .hidden { display: none !important; }
+
+    @media (max-width: 1120px) {
+      .hero,
+      .detail-banner,
+      .detail-body {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 760px) {
+      .topbar {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 10px;
+        padding: 10px 16px;
+      }
+
+      .brand {
+        width: 100%;
+        align-items: flex-start;
+      }
+
+      .it-brand {
+        align-items: center;
+        gap: 10px;
+      }
+
+      .it-emblem {
+        width: 48px;
+        height: 48px;
+        border-width: 3px;
+      }
+
+      .it-emblem::before {
+        inset: 4px;
+        border-width: 2px;
+      }
+
+      .it-emblem span {
+        font-size: 20px;
+      }
+
+      .it-name {
+        font-size: clamp(18px, 5vw, 26px);
+        letter-spacing: .12em;
+      }
+
+      .it-development,
+      .it-project {
+        font-size: 12px;
+      }
+
+      .it-project {
+        white-space: normal;
+      }
+
+      .brand h1 {
+        font-size: 18px;
+      }
+
+      .brand p {
+        margin-top: 2px;
+        font-size: 12px;
+        line-height: 1.35;
+      }
+
+      .icon-btn,
+      .text-btn,
+      .seg-btn {
+        height: 34px;
+      }
+
+      .top-actions,
+      .toolbar,
+      .section-head,
+      .group-head,
+      .detail-title {
+        align-items: stretch;
+        flex-direction: column;
+      }
+
+      .top-actions,
+      .segments {
+        justify-content: flex-start;
+      }
+
+      .kpi-grid,
+      .detail-kpis,
+      .mini-grid,
+      .gearbox-summary,
+      .gearbox-meta {
+        grid-template-columns: 1fr;
+      }
+
+      .hero-main {
+        min-height: 238px;
+      }
+
+      .machine-grid {
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      }
+
+      .risk-item {
+        grid-template-columns: 38px minmax(0, 1fr);
+      }
+
+      .score {
+        grid-column: 2;
+        text-align: left;
+      }
+    }
+
+    @page {
+      size: A4 landscape;
+      margin: 8mm;
+    }
+
+    @media print {
+      :root { --radius: 4px; }
+
+      * {
+        box-shadow: none !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+
+      html,
+      body {
+        width: 297mm;
+        min-height: 210mm;
+        background: #fff !important;
+      }
+
+      body { font-size: 9pt; }
+
+      .app { min-height: auto; }
+
+      .topbar {
+        position: static;
+        gap: 4mm;
+        padding: 0 0 4mm;
+        margin-bottom: 4mm;
+        border-bottom: 1px solid #cfd8e3;
+        background: #fff !important;
+        backdrop-filter: none;
+      }
+
+      .brand { gap: 3mm; }
+
+      .mark {
+        width: 9mm;
+        height: 9mm;
+      }
+
+      .mark svg {
+        width: 5mm;
+        height: 5mm;
+      }
+
+      .it-emblem {
+        width: 12mm;
+        height: 12mm;
+        border-width: .8mm;
+      }
+
+      .it-emblem::before {
+        inset: 1.2mm;
+        border-width: .5mm;
+      }
+
+      .it-emblem span {
+        font-size: 12pt;
+      }
+
+      .it-name {
+        font-size: 17pt;
+      }
+
+      .it-development,
+      .it-project {
+        font-size: 9pt;
+      }
+
+      .brand h1 { font-size: 15pt; }
+
+      .brand p,
+      .top-actions,
+      .toolbar,
+      .priority-panel .link-btn {
+        display: none !important;
+      }
+
+      main {
+        width: 100%;
+        max-width: none;
+        padding: 0;
+      }
+
+      .hero {
+        display: grid;
+        grid-template-columns: minmax(0, 1.12fr) minmax(0, .88fr);
+        gap: 4mm;
+        margin-bottom: 4mm;
+        break-inside: avoid;
+      }
+
+      .hero-main {
+        min-height: 42mm;
+        padding: 5mm;
+        border-radius: 2mm;
+      }
+
+      .hero-main::after {
+        width: 120mm;
+        height: 46mm;
+      }
+
+      .hero-main h2 {
+        max-width: 146mm;
+        margin: 2mm 0 5mm;
+        font-size: 24pt;
+        line-height: 1;
+      }
+
+      .eyebrow,
+      .kpi .label {
+        font-size: 7pt;
+      }
+
+      .hero-chip {
+        min-height: 6mm;
+        padding: 1mm 2mm;
+        font-size: 7pt;
+      }
+
+      .summary-panel,
+      .kpi-grid {
+        gap: 2mm;
+      }
+
+      .kpi {
+        padding: 3mm;
+        border-radius: 2mm;
+      }
+
+      .kpi .value {
+        margin-top: 2mm;
+        font-size: 18pt;
+      }
+
+      .kpi .sub {
+        margin-top: 1.5mm;
+        font-size: 7pt;
+        line-height: 1.25;
+      }
+
+      .bar-track {
+        height: 1.5mm;
+        margin-top: 2mm;
+      }
+
+      .fleet-grid {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 2mm;
+        align-items: start;
+      }
+
+      .group-section {
+        padding: 2.4mm;
+        border-radius: 2mm;
+        break-inside: avoid;
+      }
+
+      .group-head {
+        align-items: start;
+        gap: 1.5mm;
+        margin-bottom: 2mm;
+      }
+
+      .group-head h3 {
+        font-size: 9pt;
+        line-height: 1.15;
+      }
+
+      .group-head p { display: none; }
+
+      .group-count {
+        font-size: 6.5pt;
+        white-space: nowrap;
+      }
+
+      .machine-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 1.2mm;
+      }
+
+      .machine-tile {
+        min-height: 12mm;
+        padding: 1.8mm;
+        border-radius: 1.5mm;
+        break-inside: avoid;
+      }
+
+      .tile-head {
+        min-height: 0;
+        gap: 1mm;
+      }
+
+      .machine-name {
+        font-size: 8.5pt;
+        line-height: 1.05;
+      }
+
+      .status-badge {
+        min-height: 4mm;
+        padding: 0 1.3mm;
+        font-size: 5.8pt;
+      }
+
+      .tile-meta,
+      .tile-meter {
+        display: none;
+      }
+
+      .priority-panel,
+      .detail-shell {
+        break-before: page;
+        break-inside: avoid;
+      }
+
+      .priority-panel {
+        margin-top: 0;
+        padding: 4mm;
+      }
+
+      .section-head {
+        margin-bottom: 3mm;
+      }
+
+      .section-head h3,
+      .panel h3 {
+        font-size: 12pt;
+      }
+
+      .section-head p,
+      .panel p {
+        font-size: 8pt;
+      }
+
+      table {
+        min-width: 0;
+        font-size: 8pt;
+      }
+
+      th,
+      td {
+        padding: 2mm;
+        font-size: 8pt;
+        white-space: normal;
+      }
+
+      .panel,
+      .priority-panel,
+      .detail-shell {
+        border-radius: 2mm;
+        box-shadow: none;
+      }
+
+      .detail-banner,
+      .detail-body,
+      .gearbox-summary {
+        grid-template-columns: 1fr;
+      }
+
+      canvas {
+        height: 70mm;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand it-brand" aria-label="Italian-Thai Development Public Company Limited J.2411 Mae Moh Mine Phase 9">
+        <div class="it-emblem" aria-hidden="true"><span>IT</span></div>
+        <div class="it-copy">
+          <div class="it-name">ITALIAN-THAI</div>
+          <div class="it-development"><strong>DEVELOPMENT</strong><span>Public Company Limited</span></div>
+          <div class="it-project">J.2411 Mae Moh Mine Phase 9</div>
+        </div>
+      </div>
+      <div class="top-actions">
+        <span class="sync-status" id="syncStatus">Local data</span>
+        <button class="text-btn" type="button" onclick="window.print()" title="Export PDF">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M6 9V3h12v6M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+            <path d="M6 14h12v7H6z" stroke="currentColor" stroke-width="2" />
+          </svg>
+          Export
+        </button>
+        <button class="icon-btn" type="button" onclick="scrollToTop()" title="Overview">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M4 10.5 12 4l8 6.5V20a1 1 0 0 1-1 1h-5v-6h-4v6H5a1 1 0 0 1-1-1v-9.5Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round" />
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <main id="top">
+      <section class="hero" aria-label="Executive overview">
+        <div class="hero-main">
+          <div class="eyebrow" style="color:rgba(255,255,255,.72)">Executive Snapshot | June 2026</div>
+          <h2>Oil health view for 44 critical machines</h2>
+          <div class="hero-chips" id="heroChips"></div>
+        </div>
+
+        <div class="summary-panel">
+          <div class="kpi-grid">
+            <article class="kpi">
+              <div class="label">Fleet Health</div>
+              <div class="value"><span id="fleetHealth">--</span><span style="font-size:16px;color:var(--muted)"> /100</span></div>
+              <div class="sub">Average oil condition index</div>
+              <div class="bar-track"><i class="bar-fill" id="fleetHealthBar" style="width:0%"></i></div>
+            </article>
+            <article class="kpi">
+              <div class="label">Machines</div>
+              <div class="value" id="fleetTotal">--</div>
+              <div class="sub">เครื่องจักรในขอบเขต dashboard</div>
+              <div class="bar-track"><i class="bar-fill" style="width:100%"></i></div>
+            </article>
+            <article class="kpi">
+              <div class="label">Monitor</div>
+              <div class="value" id="fleetMonitor">--</div>
+              <div class="sub">ต้องติดตามแนวโน้มรอบถัดไป</div>
+              <div class="bar-track"><i class="bar-fill" id="fleetMonitorBar" style="width:0%"></i></div>
+            </article>
+            <article class="kpi">
+              <div class="label">Critical</div>
+              <div class="value" id="fleetCritical">--</div>
+              <div class="sub">ควรจัดการเชิงรุก</div>
+              <div class="bar-track"><i class="bar-fill" id="fleetCriticalBar" style="width:0%;background:linear-gradient(90deg,var(--amber),var(--red))"></i></div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="toolbar" aria-label="Fleet controls">
+        <div class="searchbox">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2" />
+            <path d="m20 20-3.4-3.4" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+          </svg>
+          <input id="searchInput" type="search" placeholder="ค้นหาเครื่องจักร เช่น SPD.A, A9.1, CR.K" autocomplete="off" />
+        </div>
+        <div class="segments" aria-label="Status filter">
+          <button class="seg-btn active" type="button" data-filter="all">All</button>
+          <button class="seg-btn" type="button" data-filter="normal">Normal</button>
+          <button class="seg-btn" type="button" data-filter="monitor">Monitor</button>
+          <button class="seg-btn" type="button" data-filter="critical">Critical</button>
+        </div>
+      </section>
+
+      <section class="fleet-grid" id="fleetGroups" aria-label="Machine groups"></section>
+      <div class="empty-state hidden" id="emptyState">ไม่พบเครื่องจักรตามเงื่อนไขที่เลือก</div>
+
+      <section class="priority-panel" aria-label="Priority action queue">
+        <div class="section-head">
+          <div>
+            <h3>Executive Priority Queue</h3>
+            <p>รายการที่ควรยกเข้าการประชุมบำรุงรักษาโดยเรียงจากความเสี่ยงสูงสุด</p>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Machine</th>
+                <th>Group</th>
+                <th>Status</th>
+                <th>Health</th>
+                <th>ISO Code</th>
+                <th>Wear Fe</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="priorityRows"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="detail-shell hidden" id="detailSection" aria-label="Oil analysis detail">
+        <div class="detail-banner">
+          <div class="detail-title">
+            <div>
+              <div class="eyebrow" id="detailGroup">Machine group</div>
+              <h2 id="detailName">Machine</h2>
+              <p id="detailSummary"></p>
+            </div>
+            <button class="icon-btn" type="button" onclick="closeDetail()" title="Close detail">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M18 6 6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+              </svg>
+            </button>
+          </div>
+          <div class="detail-kpis">
+            <article class="kpi">
+              <div class="label">Health Index</div>
+              <div class="value"><span id="detailHealth">--</span><span style="font-size:16px;color:var(--muted)"> /100</span></div>
+              <div class="sub" id="detailStatusText">--</div>
+              <div class="bar-track"><i class="bar-fill" id="detailHealthBar" style="width:0%"></i></div>
+            </article>
+            <article class="kpi">
+              <div class="label">Next Action</div>
+              <div class="value" id="detailActionDays">--</div>
+              <div class="sub">Target completion window</div>
+              <div class="bar-track"><i class="bar-fill" id="detailActionBar" style="width:0%"></i></div>
+            </article>
+          </div>
+        </div>
+
+        <div class="detail-body">
+          <div>
+            <article class="panel">
+              <div class="section-head">
+                <div>
+                  <h3>Gearbox / Oil Sampling Positions</h3>
+                  <p>เลือกตำแหน่งย่อยเพื่อดูผล Oil Analysis และข้อมูลน้ำมันของแต่ละ Gearbox</p>
+                </div>
+                <span class="tag normal" id="gearboxCount">0 positions</span>
+              </div>
+              <div class="gearbox-summary">
+                <div>
+                  <div class="eyebrow">Selected position</div>
+                  <h4 id="selectedGearboxName">-</h4>
+                  <p id="selectedGearboxNote">-</p>
+                </div>
+                <div class="gearbox-meta">
+                  <span>EP Code<b id="selectedGearboxEp">-</b></span>
+                  <span class="wide">Description<b id="selectedGearboxDescription">-</b></span>
+                  <span>Brand<b id="selectedGearboxBrand">-</b></span>
+                  <span>Model<b id="selectedGearboxModel">-</b></span>
+                  <span>S/N<b id="selectedGearboxSerial">-</b></span>
+                  <span>Oil Hours<b id="selectedGearboxHours">-</b></span>
+                  <span>Oil Volume<b id="selectedGearboxVolume">-</b></span>
+                  <span>ISO VG<b id="selectedGearboxVg">-</b></span>
+                </div>
+              </div>
+              <div class="gearbox-grid" id="gearboxList"></div>
+            </article>
+
+            <article class="panel">
+              <div class="section-head">
+                <div>
+                  <h3>Trend Analysis</h3>
+                  <p>Trend by oil condition category: Viscosity, Wear, and Contamination</p>
+                </div>
+                <select id="metricSelect" aria-label="Metric">
+                  <option value="all">All trends</option>
+                  <option value="physicalOxidation">Viscosity</option>
+                  <option value="wear">Wear</option>
+                  <option value="particleContamination">Particle Contamination</option>
+                  <option value="waterContamination">Water/Ingress Contamination</option>
+                </select>
+              </div>
+              <div class="trend-area">
+                <canvas id="trendChart" width="940" height="320" aria-label="Oil analysis trend chart"></canvas>
+              </div>
+              <div class="legend" id="trendLegend">
+                <span><i class="dot"></i>Viscosity</span>
+                <span><i class="dot red"></i>Wear</span>
+                <span><i class="dot teal"></i>Particle Contamination</span>
+                <span><i class="dot amber"></i>Water/Ingress Contamination</span>
+              </div>
+              <div class="mini-grid" id="trendMetricCards">
+                <div class="mini-card">
+                  <span>Particle Contamination</span>
+                  <strong id="detailIso">--</strong>
+                  <small>ISO Cleanliness</small>
+                  <div class="bar-track"><i class="bar-fill" id="detailIsoBar" style="width:0%"></i></div>
+                </div>
+                <div class="mini-card">
+                  <span>Viscosity @40°C</span>
+                  <strong><span id="detailViscosity">--</span> cSt</strong>
+                  <small>Ox <b id="detailOxidation">--</b></small>
+                  <div class="bar-track"><i class="bar-fill" id="detailPhysicalBar" style="width:0%"></i></div>
+                </div>
+                <div class="mini-card">
+                  <span>Wear</span>
+                  <strong><span id="detailWear">--</span> ppm</strong>
+                  <small>Fe wear metal</small>
+                  <div class="bar-track"><i class="bar-fill" id="detailWearBar" style="width:0%"></i></div>
+                </div>
+                <div class="mini-card">
+                  <span>Water/Ingress Contamination</span>
+                  <strong><span id="detailWater">--</span>%</strong>
+                  <small>Water %</small>
+                  <div class="bar-track"><i class="bar-fill" id="detailWaterBar" style="width:0%"></i></div>
+                </div>
+              </div>
+            </article>
+
+            <article class="panel" style="margin-top:16px">
+              <div class="section-head">
+                <div>
+                  <h3>Lab Result Summary</h3>
+                  <p>ผลตรวจรอบล่าสุดเทียบกับเกณฑ์ควบคุมและแนวทางตัดสินใจ</p>
+                </div>
+              </div>
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Parameter</th>
+                      <th>Result</th>
+                      <th>Limit</th>
+                      <th>Status</th>
+                      <th>Management Note</th>
+                    </tr>
+                  </thead>
+                  <tbody id="resultRows"></tbody>
+                </table>
+              </div>
+            </article>
+          </div>
+
+          <aside>
+            <article class="panel">
+              <div class="section-head">
+                <div>
+                  <h3>Risk Heatmap</h3>
+                  <p>ประเด็นที่ควรติดตามในมุม Reliability และ Production</p>
+                </div>
+              </div>
+              <div class="risk-list" id="riskList"></div>
+            </article>
+
+            <article class="panel" style="margin-top:16px">
+              <div class="section-head">
+                <div>
+                  <h3>Recommended Actions</h3>
+                  <p>แผนปฏิบัติการเรียงตามความเร่งด่วน</p>
+                </div>
+              </div>
+              <div class="recommendation-list" id="recommendations"></div>
+              <p class="footnote">หมายเหตุ: ข้อมูลในไฟล์นี้เป็นข้อมูลตัวอย่างสำหรับนำเสนอรูปแบบ Dashboard สามารถแทนค่าจริงจาก Lab report, CMMS หรือ Historian ได้ในตัวแปร JavaScript ด้านท้ายไฟล์</p>
+            </article>
+          </aside>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const groups = [
+      {
+        id: "group-1",
+        title: "กลุ่ม 1 | SPD / TPC",
+        subtitle: "Main drive and transfer package",
+        machines: ["SPD.A", "TPC.A", "SPD.B", "TPC.B"]
+      },
+      {
+        id: "group-2",
+        title: "กลุ่ม 2 | A-Line",
+        subtitle: "A series machines",
+        machines: ["A1.1", "A1", "A2", "A3", "A4", "A5", "A6", "A7", "A8", "A9", "A9.1", "A10", "A11", "A12", "A13", "A14"]
+      },
+      {
+        id: "group-3",
+        title: "กลุ่ม 3 | B-Line",
+        subtitle: "B series machines",
+        machines: ["B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10"]
+      },
+      {
+        id: "group-4",
+        title: "กลุ่ม 4 | CR",
+        subtitle: "Crusher and conveyor-related package",
+        machines: ["CR.A", "CR.B", "CR.C", "CR.D", "CR.I", "CR.J", "CR.K", "CR.L", "CR.N"]
+      },
+      {
+        id: "group-5",
+        title: "กลุ่ม 5 | BWE / BW",
+        subtitle: "Bucket wheel and belt wagon package",
+        machines: ["BWE.1", "BWE.2", "BW.1", "BW.2", "BW.3"]
+      }
+    ];
+
+    const statusOverrides = {
+      "TPC.B": "critical",
+      "A9.1": "critical",
+      "B7": "critical",
+      "CR.K": "critical",
+      "BW.3": "critical",
+      "SPD.A": "monitor",
+      "TPC.A": "monitor",
+      "A3": "monitor",
+      "A6": "monitor",
+      "A11": "monitor",
+      "B2": "monitor",
+      "B5": "monitor",
+      "B10": "monitor",
+      "CR.C": "monitor",
+      "CR.I": "monitor",
+      "BWE.2": "monitor",
+      "BW.2": "monitor"
+    };
+
+    const statusText = {
+      normal: "Normal",
+      monitor: "Monitor",
+      critical: "Critical"
+    };
+
+    const statusThai = {
+      normal: "อยู่ในเกณฑ์ควบคุม",
+      monitor: "ต้องติดตามแนวโน้ม",
+      critical: "ต้องจัดการเชิงรุก"
+    };
+
+    const oilPointTemplates = {
+      "SPD.A": ["Gear Crawler D1", "Gear Crawler D2", "Gear Slew D1", "Gear Slew D2", "Gear Disc. D1", "Gear Disc. D2", "Fluid Couping Disc. D1", "Fluid Couping Disc. D2", "Gear Rec. D1", "Gear Rec. D2", "Fluid Couping Rec. D1", "Fluid Couping Rec. D2", "Pump HYD."],
+      "SPD.B": ["Gear Crawler D1", "Gear Crawler D2", "Gear Slew D1", "Gear Slew D2", "Gear Disc. D1", "Gear Disc. D2", "Fluid Couping Disc. D1", "Fluid Couping Disc. D2", "Gear Rec. D1", "Gear Rec. D2", "Fluid Couping Rec. D1", "Fluid Couping Rec. D2", "Pump HYD."],
+      "TPC.A": ["Gear Travel D1", "Gear Travel D2", "Pump HYD."],
+      "TPC.B": ["Gear Travel D1", "Gear Travel D2", "Pump HYD."],
+      "A1.1": ["D1", "D2", "Tail"],
+      "A1": ["D1", "D2", "Tail"],
+      "A2": ["D1", "D2", "D3"],
+      "A3": ["D1", "D4"],
+      "A4": ["D1", "D3", "D4"],
+      "A5": ["D1", "D2", "D3", "D4", "Tail"],
+      "A6": ["D1", "D3", "D4"],
+      "A7": ["D1", "D2", "D3", "D4"],
+      "A8": ["D1", "D2", "D3", "D4"],
+      "A9": ["D1"],
+      "A9.1": ["D1", "D2"],
+      "A10": ["D1", "D2", "D3"],
+      "A11": ["D1", "D2", "D3", "D4"],
+      "A12": ["D1", "D2"],
+      "A13": ["D3", "D4"],
+      "A14": ["D3"],
+      "CR.A": ["Gear Disc.", "Gear Sizer D1", "Gear Sizer D2", "Gear Fine", "Gear Planetary", "Pump Apron"],
+      "CR.B": ["Gear Disc.", "Gear Sizer D1", "Gear Sizer D2", "Gear Fine", "Gear Planetary", "Pump Apron"],
+      "CR.C": ["Gear Disc.", "Gear Sizer D1", "Gear Sizer D2", "Gear Fine", "Gear Planetary", "Pump Apron"],
+      "CR.D": ["Gear Disc.", "Gear Sizer D1", "Gear Sizer D2", "Gear Fine", "Gear Planetary", "Pump Apron"],
+      "CR.I": ["Gear Disc.", "Gear Sizer D1", "Gear Sizer D2", "Fluid Couping D1", "Fluid Couping D2", "Gear Fine", "Gear Marathon D1", "Gear Marathon D2", "Pump Apron"],
+      "CR.J": ["Gear Disc.", "Gear Sizer D1", "Gear Sizer D2", "Fluid Couping D1", "Fluid Couping D2", "Gear Fine", "Gear Marathon D1", "Gear Marathon D2", "Pump Apron"],
+      "CR.K": ["Gear Disc.", "Gear Sizer D1", "Gear Sizer D2", "Fluid Couping D1", "Fluid Couping D2", "Gear Fine", "Gear Planetary L", "Gear Planetary R", "Pump Apron"],
+      "CR.L": ["Gear Disc.", "Gear Sizer D1", "Gear Sizer D2", "Fluid Couping D1", "Fluid Couping D2", "Gear Fine", "Gear Planetary L", "Gear Planetary R", "Pump Apron"],
+      "CR.N": ["Gear Disc.", "Gear Sizer D1", "Gear Sizer D2", "Fluid Couping D1", "Fluid Couping D2", "Gear Fine", "Gear Freeder D1", "Gear Freeder D2", "Pump Apron"],
+      "BWE.1": ["Gear Crawler D1", "Gear Crawler D2", "Gear Slew L D1", "Gear Slew L D2", "Gear Slew Disc.", "Gear Disc.", "Fluid Couping Disc.", "Gear Wheel", "Fluid Couping Wheel", "Gear Wheel Boom", "Pump HYD."],
+      "BWE.2": ["Gear Crawler D1", "Gear Crawler D2", "Gear Slew L D1", "Gear Slew L D2", "Gear Slew Disc.", "Gear Disc.", "Fluid Couping Disc.", "Gear Wheel", "Fluid Couping Wheel", "Gear Wheel Boom", "Pump HYD."],
+      "BW.1": ["Gear Disc. D1", "Gear Disc. D2", "Fluid Disc. D1", "Fluid Disc. D2", "Gear Slew", "Pump HYD."],
+      "BW.2": ["Gear Disc. D1", "Gear Disc. D2", "Fluid Disc. D1", "Fluid Disc. D2", "Gear Slew", "Pump HYD."],
+      "BW.3": ["Gear Disc. D1", "Gear Disc. D2", "Fluid Disc. D1", "Fluid Disc. D2", "Gear Slew", "Pump HYD."]
+    };
+
+    const machineEpCodes = {
+      "SPD.A": "08-SP0002", "SPD.B": "08-SP0003", "TPC.A": "08-TP0001", "TPC.B": "08-TP0002",
+      "CR.A": "08-CS0005", "CR.B": "08-CS0006", "CR.C": "08-CS0007", "CR.D": "08-CS0008",
+      "CR.I": "08-CS0010", "CR.J": "08-CS0013", "CR.K": "08-CS0012", "CR.L": "08-CS0011", "CR.N": "08-CS0009",
+      "BWE.1": "08-BK0001", "BWE.2": "08-BK0002",
+      "BW.1": "08-BW0001", "BW.2": "08-BW0002", "BW.3": "08-BW0003"
+    };
+
+    const oilPointEquipmentRows = [
+      ["A1", "D1", "08-GB0133", "USED GEAR BOX 1000 kW", "FLENDER", "B3 FH 17 C", "K 407 107 095-012-004"],
+      ["A1", "D2", "08-GB0129", "USED GEAR BOX 1000 kW", "FLENDER", "B3 FH 17 C", "K 407-107-095-012-003"],
+      ["A1", "Tail", "08-GB0018", "USED GEAR BOX 1300 kW", "David brown", "B3SS 560 E", "9608022/13"],
+      ["A1.1", "D1", "08-GB0079", "NEW GEAR BOX 1500 kW", "Siemens", "B3SH20", "46258517-1610-001/2019"],
+      ["A1.1", "D2", "08-GB0092", "NEW GEAR BOX 1500 kW", "Siemens", "B3SH20", "46258644-0510-002/2019"],
+      ["A1.1", "Tail", "08-GB0071", "NEW GEAR BOX 1500 kW", "Siemens", "B3SH20", "46258465-0510-003/2019"],
+      ["A2", "D1", "08-GB0086", "NEW GEAR BOX 1500 kW", "Siemens", "B3SH20", "46258489-1610-001/2019"],
+      ["A2", "D2", "08-GB0090", "NEW GEAR BOX 1500 kW", "Siemens", "B3SH20", "46258465-0510-001/2019"],
+      ["A2", "D3", "08-GB0064", "NEW GEAR BOX 1500 kW", "Siemens", "B3SH20", "46258643-3810-001/2019"],
+      ["A3", "D1", "08-GB0061", "NEW GEAR BOX 1500 kW", "Siemens", "B3SH20", "46258643-0510-001/2019"],
+      ["A3", "D4", "08-GB0062", "NEW GEAR BOX 1500 kW", "Siemens", "B3SH20", "46258643-1610-001/2019"],
+      ["A4", "D1", "08-GB0063", "NEW GEAR BOX 1500 kW", "Siemens", "B3SH20", "46258517-0510-002/2019"],
+      ["A4", "D3", "08-GB0078", "NEW GEAR BOX 1500 kW", "Siemens", "B3SH20", "46258645-2710-001/2019"],
+      ["A4", "D4", "08-GB0073", "NEW GEAR BOX 1500 kW", "Siemens", "B3SH20", "46258465-1610-002/2019"],
+      ["A5", "D1", "08-GB0069", "NEW GEAR BOX 1500 kW", "Siemens", "B3SH20", "46258645-1610-001/2019"],
+      ["A5", "D2", "08-GB0066", "NEW GEAR BOX 1500 kW", "Siemens", "B3SH20", "46258465-0510-002/2019"],
+      ["A5", "D3", "08-GB0065", "NEW GEAR BOX 1500 kW", "Siemens", "B3SH20", "46258465-2710-001/2019"],
+      ["A5", "D4", "08-GB0060", "NEW GEAR BOX 1500 kW", "Siemens", "B3SH20", "46258517-2710-002/2019"],
+      ["A5", "Tail", "08-GB0080", "NEW GEAR BOX 1500 kW", "Siemens", "B3SH20", "46258517-2710-001/2019"],
+      ["A6", "D1", "08-GB0072", "NEW GEAR BOX 1500 kW", "Siemens", "B3SH20", "46258645-0510-002/2019"],
+      ["A6", "D3", "08-GB0074", "NEW GEAR BOX 1500 kW", "Siemens", "B3SH20", "46258489-2710-002/2019"],
+      ["A6", "D4", "08-GB0081", "NEW GEAR BOX 1500 kW", "Siemens", "B3SH20", "46258644-0510-001/2019"],
+      ["A7", "D1", "08-GB0075", "NEW GEAR BOX 1500 kW", "Siemens", "B3SH20", "46258517-0510-001/2019"],
+      ["A7", "D2", "08-GB0084", "NEW GEAR BOX 1500 kW", "Siemens", "B3SH20", "46258643-1610-002/2019"],
+      ["A7", "D3", "08-GB0077", "NEW GEAR BOX 1500 kW", "Siemens", "B3SH20", "46258489-2710-001/2019"],
+      ["A7", "D4", "08-GB0087", "NEW GEAR BOX 1500 kW", "Siemens", "B3SH20", "46258644-2710-001/2019"],
+      ["A8", "D1", "08-GB0104", "NEW GEAR BOX 1500 kW", "Hyosung", "SCK71-F", "10126849_012 A1"],
+      ["A8", "D2", "08-GB0099", "NEW GEAR BOX 1500 kW", "Hyosung", "SCK71-F", "10126849_007 A2"],
+      ["A8", "D3", "08-GB0094", "NEW GEAR BOX 1500 kW", "Hyosung", "SCK71-F", "10126849_002 A1"],
+      ["A8", "D4", "08-GB0088", "NEW GEAR BOX 1500 kW", "Siemens", "B3SH20", "46258643-2710-001/2019"],
+      ["A9", "D1", "08-GB0155", "USED GEAR BOX 1000 kW", "FLENDER", "B3 FH 17 C", "K 407 107 095-004-002"],
+      ["A9.1", "D1", "08-GB0118", "NEW GEAR BOX 1000 kW", "Siemens", "B3SH 17 E", "46257887-0510-002/2019"],
+      ["A9.1", "D2", "08-GB0032", "NEW GEAR BOX 1000 kW", "Siemens", "B3SH 17 E", "46071631-0410-001/2016"],
+      ["A10", "D1", "08-GB0091", "NEW GEAR BOX 1500 kW", "Siemens", "B3SH20", "46258644-1610-003/2019"],
+      ["A10", "D2", "08-GB0085", "NEW GEAR BOX 1500 kW", "Siemens", "B3SH20", "46258489-0510-001/2019"],
+      ["A10", "D3", "08-GB0089", "NEW GEAR BOX 1500 kW", "Siemens", "B3SH20", "46258644-1610-001/2019"],
+      ["A11", "D1", "08-GB0135", "USED GEAR BOX 1000 kW", "FLENDER", "B3 FH 17 C", "K 407 107 095-045-005"],
+      ["A11", "D2", "08-GB0136", "USED GEAR BOX 1000 kW", "Flender", "B3 FH 17 C", "K 407 107 095-029-005"],
+      ["A11", "D3", "08-GB0041", "USED GEAR BOX 1000 kW", "Flender", "B3SH 17 A", "K 407 107 095-037-007"],
+      ["A11", "D4", "08-GB0127", "USED GEAR BOX 1000 kW", "Flender", "B3 FH 17 C", "K 407 107 095-037-001"],
+      ["A12", "D1", "08-GB0128", "USED GEAR BOX 1000 kW", "FLENDER", "B3 SH 17 F", "4495618-0101-001"],
+      ["A12", "D2", "08-GB0134", "USED GEAR BOX 1000 kW", "Flender", "B3 SH 17 E", "4495618-0041-002"],
+      ["A13", "D3", "08-GB0131", "USED GEAR BOX 1000 kW", "Flender", "B3 SH 17 F", "4149004 -0020-2"],
+      ["A13", "D4", "08-GB0126", "USED GEAR BOX 1000 kW", "Flender", "B3 FH 17 A", "K 407 107 095-029-008"],
+      ["A14", "D3", "08-GB0153", "USED GEAR BOX 1000 kW", "FLENDER", "B3 FH 17 A", "K 407 107 095-037-006"]
+    ];
+
+    const oilPointEquipment = oilPointEquipmentRows.reduce((acc, [machine, position, epCode, description, brand, model, serialNumber]) => {
+      if (!acc[machine]) acc[machine] = {};
+      acc[machine][position] = { epCode, description, brand, model, serialNumber };
+      return acc;
+    }, {});
+
+    let actualOilReports = {
+      "08-GB0079": {
+        actualReport: true,
+        sampleNumber: "810177611",
+        sampleDate: "19.03.2025",
+        sampleReceived: "06.06.2025",
+        sampleCompleted: "06.06.2025",
+        lubricant: "Omala S2 GX 320",
+        registeredLubricant: "Shell - Omala S2 GX 320",
+        equipmentLife: "26,665 hr",
+        lubricantLife: "10,000 hr",
+        status: "monitor",
+        health: 70,
+        iso: "20/19/17",
+        particleScore: 86,
+        viscosity: 302.2,
+        viscosity100: 28.2,
+        viscosityIndex: 125,
+        wear: 6,
+        feDisplay: "<6",
+        cuDisplay: "<10",
+        water: 0.05,
+        waterDisplay: "<0.2",
+        tan: 0,
+        tanDisplay: "-",
+        sodium: "<10",
+        silicon: "<5",
+        phosphorus: "360",
+        oxidation: "0.000",
+        particleCounts: {
+          ">4µ": "8,831",
+          ">6µ": "3,142",
+          ">14µ": "1,200",
+          ">21µ": "977",
+          ">38µ": "581",
+          ">70µ": "308"
+        },
+        diagnosis: "Particle count increased at >21, >38 and >70 micron. ISO Particle Count is severe. Recommend portable filtration or lubricant/filter change if not done at sampling time.",
+        nextAction: "กรองน้ำมัน",
+        trend: {
+          months: ["Jun 23", "Sep 23", "Nov 23", "Jan 24", "Mar 25"],
+          physicalOxidation: [80, 66, 89, 80, 80],
+          wear: [18, 52, 32, 18, 18],
+          particleContamination: [56, 68, 72, 78, 86],
+          waterContamination: [22, 26, 31, 34, 38],
+          particles: [56, 68, 72, 78, 86],
+          viscosity: [80, 66, 89, 80, 80],
+          subTrends: {
+            physicalOxidation: [
+              { label: "Viscosity 40°C", unit: "cSt", color: "#1456a0", values: [315, 278, 330, 305, 302.2] },
+              { label: "Viscosity 100°C", unit: "cSt", color: "#087f83", values: [29.5, 26.8, 30.4, 28.7, 28.2] },
+              { label: "Viscosity Index", unit: "", color: "#b87503", values: [129, 122, 132, 126, 125] }
+            ],
+            wear: [
+              { label: "Iron [Fe]", unit: "ppm", color: "#b42318", values: [8, 18, 12, 7, 6] },
+              { label: "Chromium [Cr]", unit: "ppm", color: "#7c3aed", values: [1, 2, 1, 1, 1] },
+              { label: "Tin [Sn]", unit: "ppm", color: "#0f766e", values: [0, 1, 1, 0, 0] },
+              { label: "Lead [Pb]", unit: "ppm", color: "#92400e", values: [2, 4, 3, 2, 1] },
+              { label: "Copper [Cu]", unit: "ppm", color: "#d97706", values: [12, 28, 18, 11, 10] },
+              { label: "Nickel [Ni]", unit: "ppm", color: "#475569", values: [0, 1, 1, 0, 0] },
+              { label: "Aluminium [Al]", unit: "ppm", color: "#0284c7", values: [3, 5, 4, 3, 2] }
+            ],
+            particleContamination: [
+              { label: "Water (%)", unit: "%", color: "#087f83", values: [0.04, 0.05, 0.06, 0.05, 0.05] },
+              { label: "Silicon [Si]", unit: "ppm", color: "#b87503", values: [4, 5, 5, 4, 5] }
+            ],
+            waterContamination: [
+              { label: "Water (%)", unit: "%", color: "#087f83", values: [0.04, 0.05, 0.06, 0.05, 0.05] },
+              { label: "Silicon [Si]", unit: "ppm", color: "#b87503", values: [4, 5, 5, 4, 5] }
+            ]
+          },
+          health: 70
+        }
+      }
+    };
+
+    const machines = groups.flatMap((group, groupIndex) =>
+      group.machines.map((name, machineIndex) => buildMachine(name, group, groupIndex, machineIndex))
+    );
+
+    const machineMap = new Map(machines.map(machine => [machine.name, machine]));
+    let selectedStatus = "all";
+    let selectedMachine = null;
+    let selectedOilPoint = null;
+    let realtimeTimer = null;
+    let realtimeLastUpdated = "";
+
+    const realtimeConfig = {
+      url: "data/oil-reports.json",
+      intervalMs: 60000
+    };
+
+    function hashSeed(text) {
+      let seed = 0;
+      for (let i = 0; i < text.length; i++) seed = (seed * 31 + text.charCodeAt(i)) % 9973;
+      return seed;
+    }
+
+    function buildMachine(name, group, groupIndex, machineIndex) {
+      const seed = hashSeed(name);
+      const status = statusOverrides[name] || "normal";
+      const riskWeight = status === "critical" ? 3 : status === "monitor" ? 2 : 1;
+      const healthBase = status === "critical" ? 57 : status === "monitor" ? 72 : 84;
+      const health = Math.max(48, Math.min(96, healthBase + (seed % 9) - (riskWeight * 2)));
+      const particleScore = Math.min(96, Math.max(28, 104 - health + (seed % 12)));
+      const viscosity = +(63.4 + (seed % 66) / 10 + (status === "critical" ? 2.6 : status === "monitor" ? 1.1 : 0)).toFixed(1);
+      const wear = Math.round(16 + (100 - health) * .72 + (seed % 11));
+      const water = +(0.035 + (riskWeight * .014) + ((seed % 6) * .006)).toFixed(3);
+      const tan = +(0.78 + (riskWeight * .16) + ((seed % 8) * .035)).toFixed(2);
+      const isoBase = status === "critical" ? [21, 19, 16] : status === "monitor" ? [20, 18, 15] : [18, 16, 13];
+      const iso = isoBase.map((value, index) => value + ((seed + index) % 2 === 0 && status !== "normal" ? 1 : 0)).join("/");
+      const smu = Math.round(8500 + (groupIndex + 1) * 2400 + machineIndex * 520 + (seed % 4300));
+      const nextAction = status === "critical" ? "3 วัน" : status === "monitor" ? "14 วัน" : "30 วัน";
+      const trend = buildTrend(seed, status, health, viscosity, wear, water, tan);
+
+      return {
+        name,
+        groupId: group.id,
+        groupTitle: group.title,
+        groupSubtitle: group.subtitle,
+        groupIndex,
+        machineIndex,
+        seed,
+        status,
+        health,
+        particleScore,
+        viscosity,
+        wear,
+        water,
+        tan,
+        iso,
+        smu,
+        nextAction,
+        trend,
+        summary: buildSummary(name, status, iso, viscosity, wear)
+      };
+    }
+
+    function buildTrend(seed, status, health, viscosity, wear, water = 0.05, tan = 1) {
+      const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun"];
+      const slope = status === "critical" ? 5 : status === "monitor" ? 2 : -2;
+      const particleStart = status === "critical" ? 64 : status === "monitor" ? 55 : 48;
+      const wearStart = status === "critical" ? 44 : status === "monitor" ? 32 : 24;
+      const physicalStart = status === "critical" ? 54 : status === "monitor" ? 42 : 30;
+      const waterStart = status === "critical" ? 48 : status === "monitor" ? 34 : 22;
+      const line = (start, end, jitter = 1, min = 0) => months.map((_, i) => {
+        const ratio = months.length === 1 ? 1 : i / (months.length - 1);
+        const noise = (((seed + i * 13) % 5) - 2) * jitter;
+        return +clamp(start + (end - start) * ratio + noise, min, 999).toFixed(2);
+      });
+      const physicalOxidation = months.map((_, i) => clamp(
+        physicalStart + Math.round(slope * .55 * i) + ((seed + i * 2) % 6) - 2 + Math.round((tan - .8) * 7),
+        8,
+        94
+      ));
+      const wearTrend = months.map((_, i) => clamp(wearStart + Math.round(slope * .7 * i) + ((seed + i * 3) % 4), 8, 88));
+      const particleContamination = months.map((_, i) => clamp(particleStart + slope * i + ((seed + i) % 5) - 2, 18, 94));
+      const waterContamination = months.map((_, i) => clamp(
+        waterStart + Math.round(slope * .45 * i) + ((seed + i * 4) % 5) - 1 + Math.round(water * 120),
+        8,
+        90
+      ));
+      const viscosity40 = line(viscosity - (status === "critical" ? 8 : 2), viscosity, .55, 1);
+      const viscosity100Now = +(Math.max(7.5, viscosity * .118 + (seed % 6) * .12)).toFixed(1);
+      const viscosity100 = line(viscosity100Now - (status === "critical" ? 1.8 : .7), viscosity100Now, .12, 1);
+      const viscosityIndexNow = clamp(108 + (seed % 28) - (status === "critical" ? 10 : status === "monitor" ? 4 : 0), 88, 165);
+      const viscosityIndex = line(viscosityIndexNow - (status === "normal" ? 3 : 9), viscosityIndexNow, 1.2, 1).map(Math.round);
+      const siliconNow = +(4 + (status === "critical" ? 8 : status === "monitor" ? 4 : 1) + (seed % 5)).toFixed(1);
+      const waterTrend = line(Math.max(0.01, water - .018), water, .004, 0).map(value => +value.toFixed(3));
+      const siliconTrend = line(Math.max(1, siliconNow - (status === "critical" ? 5 : 2)), siliconNow, .35, 0);
+      const subTrends = {
+        physicalOxidation: [
+          { label: "Viscosity 40°C", unit: "cSt", color: "#1456a0", values: viscosity40 },
+          { label: "Viscosity 100°C", unit: "cSt", color: "#087f83", values: viscosity100 },
+          { label: "Viscosity Index", unit: "", color: "#b87503", values: viscosityIndex }
+        ],
+        wear: [
+          { label: "Iron [Fe]", unit: "ppm", color: "#b42318", values: line(Math.max(1, wear - 10), wear, .6, 0) },
+          { label: "Chromium [Cr]", unit: "ppm", color: "#7c3aed", values: line(1 + (seed % 3), Math.max(1, Math.round(wear * .18)), .25, 0) },
+          { label: "Tin [Sn]", unit: "ppm", color: "#0f766e", values: line(seed % 2, Math.max(0, Math.round(wear * .08)), .2, 0) },
+          { label: "Lead [Pb]", unit: "ppm", color: "#92400e", values: line(1 + (seed % 4), Math.max(1, Math.round(wear * .14)), .3, 0) },
+          { label: "Copper [Cu]", unit: "ppm", color: "#d97706", values: line(4 + (seed % 8), Math.max(4, Math.round(wear * .42)), .5, 0) },
+          { label: "Nickel [Ni]", unit: "ppm", color: "#475569", values: line(seed % 2, Math.max(0, Math.round(wear * .06)), .18, 0) },
+          { label: "Aluminium [Al]", unit: "ppm", color: "#0284c7", values: line(2 + (seed % 4), Math.max(2, Math.round(wear * .22)), .35, 0) }
+        ],
+        particleContamination: [
+          { label: "Water (%)", unit: "%", color: "#087f83", values: waterTrend },
+          { label: "Silicon [Si]", unit: "ppm", color: "#b87503", values: siliconTrend }
+        ],
+        waterContamination: [
+          { label: "Water (%)", unit: "%", color: "#087f83", values: waterTrend },
+          { label: "Silicon [Si]", unit: "ppm", color: "#b87503", values: siliconTrend }
+        ]
+      };
+      return {
+        months,
+        physicalOxidation,
+        wear: wearTrend,
+        particleContamination,
+        waterContamination,
+        particles: particleContamination,
+        viscosity: physicalOxidation,
+        subTrends,
+        health
+      };
+    }
+
+    function oilTemplateFor(machineName) {
+      if (oilPointTemplates[machineName]) {
+        return { key: machineName, positions: oilPointTemplates[machineName], source: "Excel" };
+      }
+
+      const bLineMatch = machineName.match(/^B(\d+)$/);
+      if (bLineMatch) {
+        const aLineKey = "A" + bLineMatch[1];
+        if (oilPointTemplates[aLineKey]) {
+          return { key: aLineKey, positions: oilPointTemplates[aLineKey], source: "A-Line pattern" };
+        }
+      }
+
+      return { key: machineName, positions: ["Main Gearbox", "Hydraulic Pump"], source: "Default template" };
+    }
+
+    function getOilPoints(machine) {
+      const template = oilTemplateFor(machine.name);
+      return template.positions.map((position, index) => buildOilPoint(machine, position, index, template.source, template.key));
+    }
+
+    function equipmentFor(machineName, position, templateKey) {
+      const direct = oilPointEquipment[machineName] && oilPointEquipment[machineName][position];
+      if (direct) return { ...direct, direct: true };
+
+      const template = templateKey && oilPointEquipment[templateKey] && oilPointEquipment[templateKey][position];
+      if (template) return { ...template, direct: false };
+
+      return { epCode: "", description: "", brand: "", model: "", serialNumber: "", direct: false };
+    }
+
+    function buildOilPoint(machine, position, index, source, templateKey) {
+      const seed = hashSeed(machine.name + "|" + position);
+      const status = derivePointStatus(machine.status, seed, index);
+      const riskWeight = status === "critical" ? 3 : status === "monitor" ? 2 : 1;
+      const equipment = equipmentFor(machine.name, position, templateKey);
+      const healthBase = status === "critical" ? 55 : status === "monitor" ? 72 : 86;
+      const health = clamp(healthBase + (seed % 8) - riskWeight, 46, 96);
+      const particleScore = clamp(104 - health + (seed % 10), 26, 96);
+      const viscosity = +(62.4 + (seed % 72) / 10 + (riskWeight - 1) * 1.2).toFixed(1);
+      const wear = Math.round(14 + (100 - health) * .76 + (seed % 13));
+      const water = +(0.032 + riskWeight * .012 + (seed % 7) * .005).toFixed(3);
+      const tan = +(0.72 + riskWeight * .15 + (seed % 9) * .035).toFixed(2);
+      const isoBase = status === "critical" ? [21, 19, 16] : status === "monitor" ? [20, 18, 15] : [18, 16, 13];
+      const iso = isoBase.map((value, i) => value + ((seed + i) % 3 === 0 && status !== "normal" ? 1 : 0)).join("/");
+      const isoVG = estimateIsoVg(position);
+      const oilHours = Math.round(250 + (seed % 7600) + riskWeight * 380);
+      const volume = estimateOilVolume(position);
+      const nextAction = status === "critical" ? "3 วัน" : status === "monitor" ? "14 วัน" : "30 วัน";
+      const epCode = (equipment.direct && equipment.epCode) || machineEpCodes[machine.name] || makeEpCode(machine.name, seed, index);
+      const report = actualOilReports[epCode];
+
+      const point = {
+        index,
+        position,
+        source,
+        description: equipment.description || "-",
+        brand: equipment.brand || "-",
+        model: equipment.model || "-",
+        serialNumber: equipment.serialNumber || "-",
+        status,
+        health,
+        iso,
+        particleScore,
+        viscosity,
+        wear,
+        water,
+        tan,
+        isoVG,
+        oilHours,
+        volume,
+        nextAction,
+        epCode,
+        trend: buildTrend(seed, status, health, viscosity, wear, water, tan)
+      };
+
+      if (report) {
+        Object.assign(point, report, {
+          source: "Lab Report",
+          epCode,
+          oilHours: Number(String(report.lubricantLife).replace(/[^\d]/g, "")) || oilHours
+        });
+      }
+
+      return point;
+    }
+
+    function derivePointStatus(machineStatus, seed, index) {
+      if (machineStatus === "critical") return index === 0 || seed % 4 === 0 ? "critical" : "monitor";
+      if (machineStatus === "monitor") return seed % 5 === 0 ? "critical" : seed % 2 === 0 ? "monitor" : "normal";
+      return seed % 11 === 0 ? "monitor" : "normal";
+    }
+
+    function estimateIsoVg(position) {
+      if (/pump|hyd/i.test(position)) return 68;
+      if (/disc|fluid/i.test(position)) return 220;
+      return 320;
+    }
+
+    function estimateOilVolume(position) {
+      if (/pump|hyd/i.test(position)) return "1000 L";
+      if (/crawler/i.test(position)) return "419 L";
+      if (/sizer/i.test(position)) return "125 L";
+      if (/slew/i.test(position)) return "26-106 L";
+      if (/fluid/i.test(position)) return "45-80 L";
+      if (/disc|rec|travel|wheel|tail|d\d/i.test(position)) return "230-440 L";
+      return "ตาม PM";
+    }
+
+    function makeEpCode(machineName, seed, index) {
+      const prefix = machineName.startsWith("CR.") ? "08-CS" :
+        machineName.startsWith("SPD") || machineName.startsWith("TPC") ? "08-SP" :
+        machineName.startsWith("BWE") || machineName.startsWith("BW.") ? "08-BK" : "08-GB";
+      return prefix + String(1000 + ((seed + index * 17) % 8999)).padStart(4, "0");
+    }
+
+    function buildSummary(name, status, iso, viscosity, wear) {
+      if (status === "critical") {
+        return `${name} มีความเสี่ยงด้านความสะอาดน้ำมันและ wear metals สูงกว่าค่าควบคุม ควรเร่งตรวจยืนยันและจัดแผนแก้ไขในหน้าต่างการผลิตที่เหมาะสม`;
+      }
+      if (status === "monitor") {
+        return `${name} มีสัญญาณเริ่มเปลี่ยนแปลง ค่า ISO ${iso}, viscosity ${viscosity} cSt และ Fe ${wear} ppm ควรติดตามในรอบถัดไป`;
+      }
+      return `${name} อยู่ในเกณฑ์ควบคุม ค่า ISO ${iso}, viscosity ${viscosity} cSt และ wear metals ยังไม่พบสัญญาณผิดปกติ`;
+    }
+
+    function clamp(value, min, max) {
+      return Math.max(min, Math.min(max, value));
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;");
+    }
+
+    function feValue(subject) {
+      return subject.feDisplay || subject.wear;
+    }
+
+    function cuValue(subject, fallbackSeed) {
+      return subject.cuDisplay || Math.round(4 + fallbackSeed % 12);
+    }
+
+    function waterValue(subject) {
+      return subject.waterDisplay || subject.water;
+    }
+
+    function tanValue(subject) {
+      return subject.tanDisplay || `${subject.tan} mgKOH/g`;
+    }
+
+    function setSyncStatus(message, tone = "") {
+      const el = document.getElementById("syncStatus");
+      if (!el) return;
+      el.textContent = message;
+      el.className = `sync-status ${tone}`.trim();
+    }
+
+    function normalizeRealtimePayload(payload) {
+      if (!payload || typeof payload !== "object") return null;
+      const reports = payload.reports && typeof payload.reports === "object" ? payload.reports : payload;
+      return {
+        reports,
+        updatedAt: payload.updatedAt || payload.lastUpdated || new Date().toISOString()
+      };
+    }
+
+    function applyRealtimeReports(payload) {
+      const normalized = normalizeRealtimePayload(payload);
+      if (!normalized || !normalized.reports) return false;
+
+      actualOilReports = { ...actualOilReports, ...normalized.reports };
+      realtimeLastUpdated = normalized.updatedAt;
+
+      if (selectedMachine) {
+        const currentPointIndex = selectedOilPoint ? selectedOilPoint.index : 0;
+        renderGearboxList(selectedMachine);
+        setOilPoint(currentPointIndex);
+      }
+
+      const timeText = new Date(realtimeLastUpdated).toLocaleString("th-TH", {
+        dateStyle: "short",
+        timeStyle: "short"
+      });
+      setSyncStatus(`Live ${timeText}`, "live");
+      return true;
+    }
+
+    async function loadRealtimeReports() {
+      if (location.protocol === "file:") {
+        setSyncStatus("Local file mode", "warn");
+        return;
+      }
+
+      try {
+        const response = await fetch(`${realtimeConfig.url}?t=${Date.now()}`, { cache: "no-store" });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const payload = await response.json();
+        applyRealtimeReports(payload);
+      } catch (error) {
+        setSyncStatus("Data sync pending", "warn");
+      }
+    }
+
+    function startRealtimeSync() {
+      loadRealtimeReports();
+      if (realtimeTimer) clearInterval(realtimeTimer);
+      realtimeTimer = setInterval(loadRealtimeReports, realtimeConfig.intervalMs);
+    }
+
+    function scoreRank(machine) {
+      const statusScore = machine.status === "critical" ? 300 : machine.status === "monitor" ? 160 : 40;
+      return statusScore + (100 - machine.health) + machine.wear + machine.particleScore;
+    }
+
+    function renderSummary() {
+      const total = machines.length;
+      const avgHealth = Math.round(machines.reduce((sum, machine) => sum + machine.health, 0) / total);
+      const monitor = machines.filter(machine => machine.status === "monitor").length;
+      const critical = machines.filter(machine => machine.status === "critical").length;
+      const normal = machines.filter(machine => machine.status === "normal").length;
+
+      document.getElementById("fleetHealth").textContent = avgHealth;
+      document.getElementById("fleetHealthBar").style.width = avgHealth + "%";
+      document.getElementById("fleetTotal").textContent = total;
+      document.getElementById("fleetMonitor").textContent = monitor;
+      document.getElementById("fleetCritical").textContent = critical;
+      document.getElementById("fleetMonitorBar").style.width = Math.round((monitor / total) * 100) + "%";
+      document.getElementById("fleetCriticalBar").style.width = Math.round((critical / total) * 100) + "%";
+      document.getElementById("heroChips").innerHTML = [
+        `${normal} Normal`,
+        `${monitor} Monitor`,
+        `${critical} Critical`,
+        `${groups.length} Machine Groups`
+      ].map(text => `<span class="hero-chip">${escapeHtml(text)}</span>`).join("");
+    }
+
+    function renderGroups() {
+      const search = document.getElementById("searchInput").value.trim().toLowerCase();
+      let visibleCount = 0;
+      const html = groups.map(group => {
+        const groupMachines = machines.filter(machine => machine.groupId === group.id);
+        const visibleMachines = groupMachines.filter(machine => {
+          const matchesSearch = !search || machine.name.toLowerCase().includes(search);
+          const matchesStatus = selectedStatus === "all" || machine.status === selectedStatus;
+          return matchesSearch && matchesStatus;
+        });
+
+        visibleCount += visibleMachines.length;
+        if (!visibleMachines.length) return "";
+
+        return `
+          <article class="group-section" id="${group.id}">
+            <div class="group-head">
+              <div>
+                <h3>${escapeHtml(group.title)}</h3>
+                <p>${escapeHtml(group.subtitle)}</p>
+              </div>
+              <div class="group-count">${visibleMachines.length} / ${groupMachines.length} machines</div>
+            </div>
+            <div class="machine-grid">
+              ${visibleMachines.map(renderMachineTile).join("")}
+            </div>
+          </article>
+        `;
+      }).join("");
+
+      document.getElementById("fleetGroups").innerHTML = html;
+      document.getElementById("emptyState").classList.toggle("hidden", visibleCount !== 0);
+    }
+
+    function renderMachineTile(machine) {
+      const isActive = selectedMachine && selectedMachine.name === machine.name;
+      return `
+        <button class="machine-tile ${isActive ? "active" : ""}" type="button" data-machine="${escapeHtml(machine.name)}">
+          <div class="tile-head">
+            <div class="machine-name">${escapeHtml(machine.name)}</div>
+            <span class="status-badge status-${machine.status}">${statusText[machine.status]}</span>
+          </div>
+          <div class="tile-meta">
+            <span>SMU<b>${machine.smu.toLocaleString()} hr</b></span>
+            <span>Overall Status<b class="tile-state status-${machine.status}">${statusText[machine.status]}</b></span>
+          </div>
+          <div class="tile-meter"><i style="width:${machine.health}%"></i></div>
+        </button>
+      `;
+    }
+
+    function renderPriorityRows() {
+      const topMachines = [...machines].sort((a, b) => scoreRank(b) - scoreRank(a)).slice(0, 8);
+      document.getElementById("priorityRows").innerHTML = topMachines.map(machine => `
+        <tr>
+          <td><b>${escapeHtml(machine.name)}</b></td>
+          <td>${escapeHtml(machine.groupTitle.replace(/^กลุ่ม \\d+ \\| /, ""))}</td>
+          <td><span class="tag ${machine.status}">${statusText[machine.status]}</span></td>
+          <td>${machine.health}/100</td>
+          <td>${machine.iso}</td>
+          <td>${machine.wear} ppm</td>
+          <td><button class="link-btn" type="button" data-machine="${escapeHtml(machine.name)}">Detail</button></td>
+        </tr>
+      `).join("");
+    }
+
+    function openMachine(name, shouldScroll = true) {
+      const machine = machineMap.get(name);
+      if (!machine) return;
+
+      selectedMachine = machine;
+      document.getElementById("detailSection").classList.remove("hidden");
+      document.getElementById("detailGroup").textContent = machine.groupTitle;
+      document.getElementById("detailName").textContent = machine.name;
+      document.getElementById("detailSummary").textContent = machine.summary;
+      renderGearboxList(machine);
+      setOilPoint(0);
+      renderGroups();
+      history.replaceState(null, "", "#" + encodeURIComponent(machine.name));
+      if (shouldScroll) document.getElementById("detailSection").scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+
+    function closeDetail() {
+      selectedMachine = null;
+      selectedOilPoint = null;
+      document.getElementById("detailSection").classList.add("hidden");
+      history.replaceState(null, "", location.pathname);
+      renderGroups();
+    }
+
+    function renderGearboxList(machine) {
+      const points = getOilPoints(machine);
+      document.getElementById("gearboxCount").textContent = `${points.length} positions`;
+      document.getElementById("gearboxList").innerHTML = points.map(point => `
+        <button class="gearbox-card" type="button" data-point-index="${point.index}">
+          <strong>${escapeHtml(point.position)}</strong>
+          <small><span>${statusText[point.status]}</span><span>Fe ${escapeHtml(feValue(point))} ppm</span></small>
+        </button>
+      `).join("");
+    }
+
+    function setOilPoint(index) {
+      if (!selectedMachine) return;
+      const points = getOilPoints(selectedMachine);
+      selectedOilPoint = points[Math.max(0, Math.min(index, points.length - 1))] || null;
+      if (!selectedOilPoint) return;
+
+      document.querySelectorAll("#gearboxList .gearbox-card").forEach(card => {
+        card.classList.toggle("active", Number(card.dataset.pointIndex) === selectedOilPoint.index);
+      });
+
+      document.getElementById("selectedGearboxName").textContent = selectedOilPoint.position;
+      document.getElementById("selectedGearboxNote").textContent =
+        selectedOilPoint.actualReport
+          ? `${selectedMachine.name} | ${statusText[selectedOilPoint.status]} | Sample ${selectedOilPoint.sampleDate} | Source: ${selectedOilPoint.source}`
+          : `${selectedMachine.name} | ${statusText[selectedOilPoint.status]} | Source: ${selectedOilPoint.source}`;
+      document.getElementById("selectedGearboxEp").textContent = selectedOilPoint.epCode;
+      document.getElementById("selectedGearboxDescription").textContent = selectedOilPoint.description;
+      document.getElementById("selectedGearboxBrand").textContent = selectedOilPoint.brand;
+      document.getElementById("selectedGearboxModel").textContent = selectedOilPoint.model;
+      document.getElementById("selectedGearboxSerial").textContent = selectedOilPoint.serialNumber;
+      document.getElementById("selectedGearboxHours").textContent = `${selectedOilPoint.oilHours.toLocaleString()} hr`;
+      document.getElementById("selectedGearboxVolume").textContent = selectedOilPoint.volume;
+      document.getElementById("selectedGearboxVg").textContent = `ISO VG ${selectedOilPoint.isoVG}`;
+
+      updateDetailKpis(selectedOilPoint);
+      renderRisks(selectedMachine, selectedOilPoint);
+      renderRecommendations(selectedMachine, selectedOilPoint);
+      renderRows(selectedMachine, selectedOilPoint);
+      renderTrendCards(selectedOilPoint);
+      drawChart();
+    }
+
+    function updateDetailKpis(point) {
+      document.getElementById("detailHealth").textContent = point.health;
+      document.getElementById("detailHealthBar").style.width = point.health + "%";
+      document.getElementById("detailStatusText").textContent = `${statusText[point.status]} | ${point.position}`;
+      document.getElementById("detailActionDays").textContent = point.nextAction;
+      document.getElementById("detailActionBar").style.width = point.status === "critical" ? "92%" : point.status === "monitor" ? "66%" : "38%";
+    }
+
+    function scrollToTop() {
+      document.getElementById("top").scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+
+    function renderRisks(machine, point = machine) {
+      const subject = point || machine;
+      const riskRows = [
+        [
+          subject.status,
+          "Oil Cleanliness",
+          subject.status === "normal"
+            ? "ค่า ISO อยู่ในกรอบควบคุม"
+            : `ค่า ISO ${subject.iso} สูงกว่าเป้าหมาย ควรตรวจ particle ingress และ filter condition`,
+          subject.status === "critical" ? "High" : subject.status === "monitor" ? "Med" : "Low"
+        ],
+        [
+          subject.wear > 42 ? "critical" : subject.wear > 32 ? "monitor" : "normal",
+          "Wear Metals",
+          `Fe ${feValue(subject)} ppm ${subject.wear > 32 ? "ควรเทียบ vibration และอุณหภูมิ bearing" : "ยังไม่พบแนวโน้มสึกหรอผิดปกติ"}`,
+          subject.wear > 42 ? "High" : subject.wear > 32 ? "Med" : "Low"
+        ],
+        [
+          subject.water > 0.09 ? "monitor" : "normal",
+          "Water Content",
+          `Water ${subject.water}% ${subject.water > 0.09 ? "ใกล้ระดับควบคุม ควรตรวจ seal และ breather" : "ยังอยู่ในเกณฑ์"}`,
+          subject.water > 0.09 ? "Med" : "Low"
+        ]
+      ];
+
+      const iconMap = {
+        normal: '<path d="M20 6 9 17l-5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>',
+        monitor: '<path d="M12 8v5M12 17h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M10.3 4.6 2.8 17.5A2 2 0 0 0 4.5 20h15a2 2 0 0 0 1.7-2.5L13.7 4.6a2 2 0 0 0-3.4 0Z" stroke="currentColor" stroke-width="2"/>',
+        critical: '<path d="M12 9v4M12 17h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/>'
+      };
+
+      document.getElementById("riskList").innerHTML = riskRows.map(([tone, title, detail, score]) => `
+        <div class="risk-item">
+          <div class="risk-icon ${tone}">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">${iconMap[tone]}</svg>
+          </div>
+          <div>
+            <div class="risk-title">${escapeHtml(title)}</div>
+            <div class="risk-detail">${escapeHtml(detail)}</div>
+          </div>
+          <div class="score">${escapeHtml(score)}</div>
+        </div>
+      `).join("");
+    }
+
+    function renderRecommendations(machine, point = machine) {
+      const subject = point || machine;
+      const items = point && point.actualReport
+        ? [
+          ["Portable filtration", "จากรายงาน ISO Particle Count อยู่ระดับ severe แนะนำกรองน้ำมันด้วย portable filtration เพื่อลด contamination"],
+          ["ตรวจ filter / lubricant change", "พิจารณาเปลี่ยน filter หรือน้ำมัน หากยังไม่ได้ดำเนินการในช่วง sampling"],
+          ["ติดตาม particle trend", "Particle count เพิ่มที่ >21, >38 และ >70 micron ควรเก็บตัวอย่างซ้ำหลัง action"]
+        ]
+        : subject.status === "critical"
+        ? [
+          ["เก็บตัวอย่างซ้ำและตรวจ Filter", "ยืนยันผล lab ภายใน 3 วัน พร้อมตรวจ differential pressure และ bypass condition"],
+          ["ตรวจจุด ingress", "ตรวจ breather, seal, hatch และขั้นตอนเติมน้ำมันที่อาจทำให้ particle เข้าใหม่"],
+          ["กำหนด maintenance window", `วางแผน inspection ${point ? "ที่ " + point.position : ""} ร่วมกับ Operations เพื่อป้องกัน unplanned downtime`]
+        ]
+        : subject.status === "monitor"
+          ? [
+            ["กรองน้ำมัน Offline", `ดำเนินการภายใน 14 วัน และตรวจ ISO code ซ้ำหลังกรอง${point ? " ที่ " + point.position : ""}`],
+            ["เทียบ Condition Monitoring", "นำ Fe trend เทียบ vibration, temperature และ load profile"],
+            ["ยืนยันรอบ Sampling", "เพิ่มความถี่ชั่วคราวจนค่า particle และ wear กลับเข้าสู่แนวโน้มปกติ"]
+          ]
+          : [
+            ["คงรอบ Sample รายเดือน", "รักษาวินัยเก็บตัวอย่างและ trend ค่า cleanliness ต่อเนื่อง"],
+            ["ตรวจ Oil Storage", "ป้องกัน contamination ระหว่างจัดเก็บและเติมน้ำมัน"],
+            ["บันทึก Filter DP", "ใช้ข้อมูลจริงประกอบการเปลี่ยน filter ตามสภาพ ไม่ยึดเฉพาะรอบเวลา"]
+          ];
+
+      document.getElementById("recommendations").innerHTML = items.map(([title, detail]) => `
+        <div class="recommendation">
+          <b>${escapeHtml(title)}</b>
+          <span>${escapeHtml(detail)}</span>
+        </div>
+      `).join("");
+    }
+
+    function parameterStatus(subject, parameter) {
+      if (parameter === "ISO 4406") return subject.status;
+      if (parameter === "Fe") return subject.wear > 42 ? "critical" : subject.wear > 32 ? "monitor" : "normal";
+      if (parameter === "Water") return subject.water > 0.1 ? "critical" : subject.water > 0.08 ? "monitor" : "normal";
+      if (parameter === "TAN") return subject.tan > 1.45 ? "monitor" : "normal";
+      if (parameter === "Diagnosis") return subject.status;
+      if (parameter.startsWith("Particle >21") || parameter.startsWith("Particle >38") || parameter.startsWith("Particle >70")) return subject.status;
+      return "normal";
+    }
+
+    function renderRows(machine, point = machine) {
+      const subject = point || machine;
+      const rows = [
+        ["Position", point ? point.position : machine.name, "-", "ตำแหน่ง Gearbox / จุดเก็บตัวอย่าง"],
+        ["EP Code", point ? point.epCode : "-", "-", "อ้างอิงอุปกรณ์จากรายการน้ำมัน"],
+        ["Description", point ? point.description : "-", "-", "รายละเอียดอุปกรณ์จากไฟล์ข้อมูลน้ำมัน"],
+        ["Brand", point ? point.brand : "-", "-", "ผู้ผลิต / ยี่ห้อ"],
+        ["Model", point ? point.model : "-", "-", "รุ่น Gearbox"],
+        ["S/N", point ? point.serialNumber : "-", "-", "Serial number"],
+        ...(point && point.actualReport ? [
+          ["Sample Number", point.sampleNumber, "-", "หมายเลขตัวอย่างจาก Lab report"],
+          ["Sample Date", point.sampleDate, "-", "วันที่เก็บตัวอย่าง"],
+          ["Sample Completed", point.sampleCompleted, "-", "วันที่ออกรายงาน"],
+          ["Lubricant", point.registeredLubricant, "-", "น้ำมันที่ลงทะเบียนในรายงาน"],
+          ["Equipment Life", point.equipmentLife, "-", "ชั่วโมงใช้งานเครื่องจักร"],
+          ["Lubricant Life", point.lubricantLife, "-", "ชั่วโมงใช้งานน้ำมัน"]
+        ] : []),
+        ["ISO 4406", subject.iso, "≤ 18/16/13", "ความสะอาดน้ำมันและ filtration"],
+        ["Viscosity @40°C", `${subject.viscosity} cSt`, "60-72 cSt", "ความหนืดสำหรับฟิล์มน้ำมัน"],
+        ...(point && point.actualReport ? [
+          ["Viscosity @100°C", `${point.viscosity100} cSt`, "-", "Physical characteristics"],
+          ["Viscosity Index", point.viscosityIndex, "-", "Physical characteristics"]
+        ] : []),
+        ["Fe", `${feValue(subject)} ppm`, "≤ 35 ppm", "โลหะสึกหรอจาก gear/bearing"],
+        ["Cu", `${cuValue(subject, subject.index || machine.seed)} ppm`, "≤ 15 ppm", "สัญญาณจาก bush/bearing alloy"],
+        ["Water", `${waterValue(subject)}%`, "≤ 0.10%", "โอกาสเกิด corrosion และ additive depletion"],
+        ["TAN", tanValue(subject), "≤ 1.50", "oxidation และอายุการใช้งานน้ำมัน"],
+        ...(point && point.actualReport ? [
+          ["Particle >4µ", point.particleCounts[">4µ"], "-", "ISO 4406 particle count"],
+          ["Particle >6µ", point.particleCounts[">6µ"], "-", "ISO 4406 particle count"],
+          ["Particle >14µ", point.particleCounts[">14µ"], "-", "ISO 4406 particle count"],
+          ["Particle >21µ", point.particleCounts[">21µ"], "-", "Particle count increased"],
+          ["Particle >38µ", point.particleCounts[">38µ"], "-", "Particle count increased"],
+          ["Particle >70µ", point.particleCounts[">70µ"], "-", "Particle count increased"],
+          ["Sodium", `${point.sodium} ppm`, "-", "Contamination indicator"],
+          ["Silicon", `${point.silicon} ppm`, "-", "Contamination indicator"],
+          ["Phosphorus", `${point.phosphorus} ppm`, "-", "Additive element"],
+          ["Oxidation", point.oxidation, "-", "Oil condition"],
+          ["Diagnosis", "Particle count severe", "-", point.diagnosis]
+        ] : [])
+      ];
+
+      document.getElementById("resultRows").innerHTML = rows.map(([parameter, result, limit, note]) => {
+        const tone = parameterStatus(subject, parameter);
+        return `
+          <tr>
+            <td><b>${escapeHtml(parameter)}</b></td>
+            <td>${escapeHtml(result)}</td>
+            <td>${escapeHtml(limit)}</td>
+            <td><span class="tag ${tone}">${statusText[tone]}</span></td>
+            <td>${escapeHtml(note)}</td>
+          </tr>
+        `;
+      }).join("");
+    }
+
+    function latestTrendValue(values) {
+      return Array.isArray(values) && values.length ? Number(values[values.length - 1]) : 0;
+    }
+
+    function formatTrendValue(value, unit = "") {
+      if (!Number.isFinite(value)) return "--";
+      if (unit === "%") {
+        return `${value < 1 ? value.toFixed(3) : value.toFixed(2)}%`;
+      }
+      const rounded = Math.abs(value) >= 100 ? (Number.isInteger(value) ? Math.round(value) : +value.toFixed(1)) :
+        Math.abs(value) >= 10 ? +value.toFixed(1) : +value.toFixed(2);
+      return `${rounded}${unit ? " " + unit : ""}`;
+    }
+
+    function niceChartMax(value) {
+      if (!Number.isFinite(value) || value <= 0) return 100;
+      const magnitude = Math.pow(10, Math.floor(Math.log10(value)));
+      const normalized = value / magnitude;
+      const nice = normalized <= 1 ? 1 : normalized <= 2 ? 2 : normalized <= 5 ? 5 : 10;
+      return nice * magnitude;
+    }
+
+    function formatAxisValue(value, max) {
+      if (max <= 1) return value.toFixed(2);
+      if (max <= 10) return value.toFixed(1);
+      return String(Math.round(value));
+    }
+
+    function aggregateTrendSeries(data) {
+      return [
+        { key: "physicalOxidation", label: "Viscosity", unit: "score", values: data.physicalOxidation || data.viscosity, color: "#1456a0" },
+        { key: "wear", label: "Wear", unit: "score", values: data.wear, color: "#b42318" },
+        { key: "particleContamination", label: "Particle Contamination", unit: "score", values: data.particleContamination || data.particles, color: "#087f83" },
+        { key: "waterContamination", label: "Water/Ingress Contamination", unit: "score", values: data.waterContamination || data.contamination, color: "#b87503" }
+      ].filter(item => Array.isArray(item.values));
+    }
+
+    function getTrendSeries(data, metric) {
+      if (!data) return [];
+      if (metric !== "all") {
+        const subSeries = data.subTrends && data.subTrends[metric];
+        if (Array.isArray(subSeries) && subSeries.length) {
+          return subSeries
+            .filter(item => Array.isArray(item.values))
+            .map(item => ({ ...item, key: metric }));
+        }
+      }
+
+      return aggregateTrendSeries(data)
+        .filter(item => metric === "all" || item.key === metric || item.fallback === metric);
+    }
+
+    function trendChartMax(series, metric) {
+      if (metric === "all") return 100;
+      const maxValue = Math.max(...series.flatMap(item => item.values || []).map(Number).filter(Number.isFinite), 0);
+      return niceChartMax(maxValue * 1.1);
+    }
+
+    function renderTrendLegend(series) {
+      document.getElementById("trendLegend").innerHTML = series.map(item => `
+        <span><i class="dot" style="background:${escapeHtml(item.color || "#1456a0")}"></i>${escapeHtml(item.label)}</span>
+      `).join("");
+    }
+
+    function renderTrendCards(subject = selectedOilPoint || selectedMachine) {
+      if (!subject) return;
+      const metric = document.getElementById("metricSelect").value;
+      const data = subject.trend || selectedMachine.trend;
+      const cards = metric === "all" ? [
+        {
+          label: "Viscosity",
+          value: `${subject.viscosity} cSt`,
+          detail: `Ox ${subject.oxidation || tanValue(subject)}`,
+          bar: clamp(Math.round((subject.viscosity - 55) * 3.2), 18, 92)
+        },
+        {
+          label: "Wear",
+          value: `${feValue(subject)} ppm`,
+          detail: "Fe wear metal",
+          bar: clamp(subject.wear * 1.55, 18, 94)
+        },
+        {
+          label: "Particle Contamination",
+          value: subject.iso,
+          detail: "ISO Cleanliness",
+          bar: subject.particleScore
+        },
+        {
+          label: "Water/Ingress Contamination",
+          value: `${waterValue(subject)}%`,
+          detail: "Water %",
+          bar: clamp(Math.round(subject.water * 520), 18, 92)
+        }
+      ] : getTrendSeries(data, metric).map(item => {
+        const latest = latestTrendValue(item.values);
+        const chartMax = trendChartMax([item], metric);
+        return {
+          label: item.label,
+          value: formatTrendValue(latest, item.unit),
+          detail: data.months && data.months.length ? `Latest ${data.months[data.months.length - 1]}` : "Latest sample",
+          bar: clamp(Math.round((latest / chartMax) * 100), 8, 96)
+        };
+      });
+
+      document.getElementById("trendMetricCards").innerHTML = cards.map(card => `
+        <div class="mini-card">
+          <span>${escapeHtml(card.label)}</span>
+          <strong>${escapeHtml(card.value)}</strong>
+          <small>${escapeHtml(card.detail)}</small>
+          <div class="bar-track"><i class="bar-fill" style="width:${card.bar}%"></i></div>
+        </div>
+      `).join("");
+    }
+
+    function drawChart() {
+      if (!selectedMachine) return;
+      const canvas = document.getElementById("trendChart");
+      const ctx = canvas.getContext("2d");
+      const rect = canvas.getBoundingClientRect();
+      const ratio = window.devicePixelRatio || 1;
+      const width = Math.max(620, rect.width || 840);
+      const height = 300;
+      canvas.width = width * ratio;
+      canvas.height = height * ratio;
+      ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+
+      const pad = { top: 18, right: 26, bottom: 36, left: 42 };
+      const plotW = width - pad.left - pad.right;
+      const plotH = height - pad.top - pad.bottom;
+      const data = (selectedOilPoint && selectedOilPoint.trend) || selectedMachine.trend;
+      const metric = document.getElementById("metricSelect").value;
+      const series = getTrendSeries(data, metric);
+      const yMax = trendChartMax(series, metric);
+      const months = data.months || [];
+      renderTrendLegend(series);
+
+      ctx.clearRect(0, 0, width, height);
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, width, height);
+
+      ctx.strokeStyle = "#dce5f1";
+      ctx.lineWidth = 1;
+      ctx.fillStyle = "#68778f";
+      ctx.font = "12px Segoe UI, Arial";
+      for (let i = 0; i <= 4; i++) {
+        const y = pad.top + (plotH / 4) * i;
+        const axisValue = yMax - (yMax / 4) * i;
+        ctx.beginPath();
+        ctx.moveTo(pad.left, y);
+        ctx.lineTo(width - pad.right, y);
+        ctx.stroke();
+        ctx.fillText(formatAxisValue(axisValue, yMax), 8, y + 4);
+      }
+
+      months.forEach((month, index) => {
+        const x = pad.left + (plotW / Math.max(1, months.length - 1)) * index;
+        ctx.fillText(month, x - 10, height - 12);
+      });
+
+      series.forEach(({ values, color }) => {
+        ctx.strokeStyle = color || "#1456a0";
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        values.forEach((value, index) => {
+          const x = pad.left + (plotW / Math.max(1, values.length - 1)) * index;
+          const y = pad.top + plotH - (Number(value) / yMax) * plotH;
+          if (index === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        });
+        ctx.stroke();
+
+        values.forEach((value, index) => {
+          const x = pad.left + (plotW / Math.max(1, values.length - 1)) * index;
+          const y = pad.top + plotH - (Number(value) / yMax) * plotH;
+          ctx.fillStyle = "#ffffff";
+          ctx.beginPath();
+          ctx.arc(x, y, 5, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.strokeStyle = color || "#1456a0";
+          ctx.lineWidth = 2;
+          ctx.stroke();
+        });
+      });
+    }
+
+    document.getElementById("fleetGroups").addEventListener("click", event => {
+      const button = event.target.closest("[data-machine]");
+      if (button) openMachine(button.dataset.machine);
+    });
+
+    document.getElementById("priorityRows").addEventListener("click", event => {
+      const button = event.target.closest("[data-machine]");
+      if (button) openMachine(button.dataset.machine);
+    });
+
+    document.getElementById("gearboxList").addEventListener("click", event => {
+      const button = event.target.closest("[data-point-index]");
+      if (button) setOilPoint(Number(button.dataset.pointIndex));
+    });
+
+    document.getElementById("searchInput").addEventListener("input", renderGroups);
+
+    document.querySelectorAll(".seg-btn").forEach(button => {
+      button.addEventListener("click", () => {
+        selectedStatus = button.dataset.filter;
+        document.querySelectorAll(".seg-btn").forEach(item => item.classList.toggle("active", item === button));
+        renderGroups();
+      });
+    });
+
+    document.getElementById("metricSelect").addEventListener("change", () => {
+      renderTrendCards();
+      drawChart();
+    });
+    window.addEventListener("resize", drawChart);
+
+    renderSummary();
+    renderGroups();
+    renderPriorityRows();
+
+    if (location.hash) {
+      const name = decodeURIComponent(location.hash.slice(1));
+      if (machineMap.has(name)) openMachine(name, false);
+    }
+
+    startRealtimeSync();
+  </script>
+</body>
+</html>
