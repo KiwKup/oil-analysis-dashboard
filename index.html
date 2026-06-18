@@ -2159,6 +2159,32 @@
       return subject.tanDisplay || `${subject.tan} mgKOH/g`;
     }
 
+    function trendLabValue(subject, category, labelPrefix) {
+      const series = subject.trend && subject.trend.subTrends && subject.trend.subTrends[category];
+      if (!Array.isArray(series)) return null;
+      const item = series.find(entry => String(entry.label).toLowerCase().startsWith(labelPrefix.toLowerCase()));
+      return item ? latestTrendValue(item.values) : null;
+    }
+
+    function labValue(value, unit = "", decimals = 2) {
+      if (value === null || value === undefined || value === "") return "-";
+      const display = typeof value === "number"
+        ? String(Number(value.toFixed(decimals)))
+        : String(value);
+      if (!unit || display === "-") return display;
+      return `${display}${unit === "%" ? "" : " "}${unit}`;
+    }
+
+    function viscosityLimit(subject) {
+      const isoVg = Number(subject.isoVG) || 68;
+      return `${Math.round(isoVg * .9)}-${Math.round(isoVg * 1.1)} cSt`;
+    }
+
+    function particleCountValue(subject, size) {
+      const counts = subject.particleCounts || {};
+      return counts[`>${size}µ`] || counts[`>${size}ยต`] || "-";
+    }
+
     function setSyncStatus(message, tone = "") {
       const el = document.getElementById("syncStatus");
       if (!el) return;
@@ -2476,7 +2502,15 @@
 
     function parameterStatus(subject, parameter) {
       if (parameter === "ISO 4406") return subject.status;
+      if (parameter === "Viscosity @40°C") {
+        const isoVg = Number(subject.isoVG) || 68;
+        return subject.viscosity < isoVg * .9 || subject.viscosity > isoVg * 1.1 ? "critical" : "normal";
+      }
       if (parameter === "Fe") return subject.wear > 42 ? "critical" : subject.wear > 32 ? "monitor" : "normal";
+      if (parameter === "Cu") {
+        const copper = Number(String(subject.cuDisplay || "").replace(/[^\d.]/g, "")) || cuValue(subject, subject.index || 0);
+        return copper > 15 ? "critical" : copper > 12 ? "monitor" : "normal";
+      }
       if (parameter === "Water") return subject.water > 0.1 ? "critical" : subject.water > 0.08 ? "monitor" : "normal";
       if (parameter === "TAN") return subject.tan > 1.45 ? "monitor" : "normal";
       if (parameter === "Diagnosis") return subject.status;
@@ -2486,6 +2520,22 @@
 
     function renderRows(machine, point = machine) {
       const subject = point || machine;
+      const viscosity100 = point && point.viscosity100 !== undefined
+        ? point.viscosity100
+        : trendLabValue(subject, "physicalOxidation", "Viscosity 100");
+      const viscosityIndex = point && point.viscosityIndex !== undefined
+        ? point.viscosityIndex
+        : trendLabValue(subject, "physicalOxidation", "Viscosity Index");
+      const wearResults = {
+        Cr: trendLabValue(subject, "wear", "Chromium"),
+        Sn: trendLabValue(subject, "wear", "Tin"),
+        Pb: trendLabValue(subject, "wear", "Lead"),
+        Ni: trendLabValue(subject, "wear", "Nickel"),
+        Al: trendLabValue(subject, "wear", "Aluminium")
+      };
+      const silicon = point && point.actualReport
+        ? point.silicon
+        : trendLabValue(subject, "particleContamination", "Silicon");
       const rows = [
         ["Position", point ? point.position : machine.name, "-", "ตำแหน่ง Gearbox / จุดเก็บตัวอย่าง"],
         ["EP Code", point ? point.epCode : "-", "-", "อ้างอิงอุปกรณ์จากรายการน้ำมัน"],
@@ -2502,25 +2552,30 @@
           ["Lubricant Life", point.lubricantLife, "-", "ชั่วโมงใช้งานน้ำมัน"]
         ] : []),
         ["ISO 4406", subject.iso, "≤ 18/16/13", "ความสะอาดน้ำมันและ filtration"],
-        ["Viscosity @40°C", `${subject.viscosity} cSt`, "60-72 cSt", "ความหนืดสำหรับฟิล์มน้ำมัน"],
+        ["Viscosity @40°C", labValue(subject.viscosity, "cSt", 1), viscosityLimit(subject), "ความหนืดสำหรับฟิล์มน้ำมัน"],
+        ["Viscosity @100°C", labValue(viscosity100, "cSt", 1), "-", "ความหนืดที่อุณหภูมิ 100°C"],
+        ["Viscosity Index", labValue(viscosityIndex, "", 0), "-", "ดัชนีการเปลี่ยนแปลงความหนืดตามอุณหภูมิ"],
+        ["Fe", labValue(feValue(subject), "ppm", 0), "≤ 35 ppm", "โลหะสึกหรอจาก gear/bearing"],
+        ["Cr", labValue(wearResults.Cr, "ppm", 1), "-", "โลหะจาก bearing, shaft หรือผิวชุบแข็ง"],
+        ["Sn", labValue(wearResults.Sn, "ppm", 1), "-", "โลหะจาก bearing alloy"],
+        ["Pb", labValue(wearResults.Pb, "ppm", 1), "-", "โลหะจาก bearing alloy และชิ้นส่วนรับแรง"],
+        ["Cu", labValue(cuValue(subject, subject.index || machine.seed), "ppm", 0), "≤ 15 ppm", "สัญญาณจาก bush/bearing alloy"],
+        ["Ni", labValue(wearResults.Ni, "ppm", 1), "-", "โลหะจาก alloy steel"],
+        ["Al", labValue(wearResults.Al, "ppm", 1), "-", "โลหะจาก housing หรือ bearing alloy"],
+        ["Water", labValue(waterValue(subject), "%", 3), "≤ 0.10%", "โอกาสเกิด corrosion และ additive depletion"],
+        ["Silicon [Si]", labValue(silicon, "ppm", 1), "-", "ตัวบ่งชี้ฝุ่นและสิ่งปนเปื้อนจากภายนอก"],
         ...(point && point.actualReport ? [
-          ["Viscosity @100°C", `${point.viscosity100} cSt`, "-", "Physical characteristics"],
-          ["Viscosity Index", point.viscosityIndex, "-", "Physical characteristics"]
+          ["Sodium [Na]", labValue(point.sodium, "ppm", 1), "-", "ตัวบ่งชี้สิ่งปนเปื้อน"],
+          ["Phosphorus [P]", labValue(point.phosphorus, "ppm", 1), "-", "ธาตุสารเติมแต่งในน้ำมัน"]
         ] : []),
-        ["Fe", `${feValue(subject)} ppm`, "≤ 35 ppm", "โลหะสึกหรอจาก gear/bearing"],
-        ["Cu", `${cuValue(subject, subject.index || machine.seed)} ppm`, "≤ 15 ppm", "สัญญาณจาก bush/bearing alloy"],
-        ["Water", `${waterValue(subject)}%`, "≤ 0.10%", "โอกาสเกิด corrosion และ additive depletion"],
         ["TAN", tanValue(subject), "≤ 1.50", "oxidation และอายุการใช้งานน้ำมัน"],
         ...(point && point.actualReport ? [
-          ["Particle >4µ", point.particleCounts[">4µ"], "-", "ISO 4406 particle count"],
-          ["Particle >6µ", point.particleCounts[">6µ"], "-", "ISO 4406 particle count"],
-          ["Particle >14µ", point.particleCounts[">14µ"], "-", "ISO 4406 particle count"],
-          ["Particle >21µ", point.particleCounts[">21µ"], "-", "Particle count increased"],
-          ["Particle >38µ", point.particleCounts[">38µ"], "-", "Particle count increased"],
-          ["Particle >70µ", point.particleCounts[">70µ"], "-", "Particle count increased"],
-          ["Sodium", `${point.sodium} ppm`, "-", "Contamination indicator"],
-          ["Silicon", `${point.silicon} ppm`, "-", "Contamination indicator"],
-          ["Phosphorus", `${point.phosphorus} ppm`, "-", "Additive element"],
+          ["Particle >4µ", particleCountValue(point, 4), "-", "ISO 4406 particle count"],
+          ["Particle >6µ", particleCountValue(point, 6), "-", "ISO 4406 particle count"],
+          ["Particle >14µ", particleCountValue(point, 14), "-", "ISO 4406 particle count"],
+          ["Particle >21µ", particleCountValue(point, 21), "-", "Particle count increased"],
+          ["Particle >38µ", particleCountValue(point, 38), "-", "Particle count increased"],
+          ["Particle >70µ", particleCountValue(point, 70), "-", "Particle count increased"],
           ["Oxidation", point.oxidation, "-", "Oil condition"],
           ["Diagnosis", "Particle count severe", "-", point.diagnosis]
         ] : [])
