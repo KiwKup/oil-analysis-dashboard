@@ -1579,12 +1579,6 @@
                   <small>Fe wear metal</small>
                   <div class="bar-track"><i class="bar-fill" id="detailWearBar" style="width:0%"></i></div>
                 </div>
-                <div class="mini-card">
-                  <span>Water/Ingress Contamination</span>
-                  <strong><span id="detailWater">--</span>%</strong>
-                  <small>Water %</small>
-                  <div class="bar-track"><i class="bar-fill" id="detailWaterBar" style="width:0%"></i></div>
-                </div>
               </div>
             </article>
 
@@ -2646,13 +2640,6 @@
           detail: "ISO Cleanliness",
           bar: subject.particleScore,
           status: trendCategoryStatus(data, "particleContamination")
-        },
-        {
-          label: "Water/Ingress Contamination",
-          value: `${waterValue(subject)}%`,
-          detail: "Water %",
-          bar: clamp(Math.round(subject.water * 520), 18, 92),
-          status: trendCategoryStatus(data, "waterContamination")
         }
       ] : getTrendSeries(data, metric).map(item => {
         const latest = latestTrendValue(item.values);
