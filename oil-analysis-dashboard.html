@@ -1772,6 +1772,13 @@
 
     const machineEpCodes = {
       "SPD.A": "08-SP0002", "SPD.B": "08-SP0003", "TPC.A": "08-TP0001", "TPC.B": "08-TP0002",
+      "A1.1": "08-DS0021", "A1": "08-DS0034", "A2": "08-DS0007", "A3": "08-DS0022",
+      "A4": "08-DS0023", "A5": "08-DS0025", "A6": "08-DS0026", "A7": "08-DS0027",
+      "A8": "08-DS0005", "A9": "08-DS0036", "A9.1": "08-DS0012", "A10": "08-DS0033",
+      "A11": "08-DS0017", "A12": "08-DS0035", "A13": "08-DS0015", "A14": "08-DS0009",
+      "B1": "08-DS0020", "B2": "Not assigned", "B3": "08-DS0028", "B4": "08-DS0029",
+      "B5": "08-DS0002", "B6": "08-DS0001", "B7": "08-DS0003", "B8": "08-DS0014",
+      "B9": "08-DS0006", "B10": "08-DS0008",
       "CR.A": "08-CS0005", "CR.B": "08-CS0006", "CR.C": "08-CS0007", "CR.D": "08-CS0008",
       "CR.I": "08-CS0010", "CR.J": "08-CS0013", "CR.K": "08-CS0012", "CR.L": "08-CS0011", "CR.N": "08-CS0009",
       "BWE.1": "08-BK0001", "BWE.2": "08-BK0002",
@@ -2678,7 +2685,7 @@
     function renderMachineTile(machine) {
       const isActive = selectedMachine && selectedMachine.name === machine.name;
       const primaryOilPoint = getOilPoints(machine)[0];
-      const epCode = primaryOilPoint && primaryOilPoint.epCode ? primaryOilPoint.epCode : "-";
+      const epCode = machineEpCodes[machine.name] || (primaryOilPoint && primaryOilPoint.epCode ? primaryOilPoint.epCode : "-");
       const oilHours = primaryOilPoint && Number.isFinite(primaryOilPoint.oilHours)
         ? `${primaryOilPoint.oilHours.toLocaleString()} hr`
         : "-";
