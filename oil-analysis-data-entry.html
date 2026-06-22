@@ -1,0 +1,919 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Oil Analysis Data Entry</title>
+  <style>
+    :root {
+      --bg: #f3f6fa;
+      --panel: #ffffff;
+      --ink: #10203a;
+      --muted: #68778f;
+      --line: #d8e2ef;
+      --blue: #1456a0;
+      --teal: #087f83;
+      --green: #137333;
+      --green-soft: #e8f5ec;
+      --amber: #a86600;
+      --amber-soft: #fff3d9;
+      --red: #b42318;
+      --red-soft: #fee9e7;
+      --shadow: 0 12px 30px rgba(28, 43, 64, .08);
+      --radius: 7px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: var(--bg);
+      font-family: "Noto Sans Thai", "Leelawadee UI", "Segoe UI", Arial, sans-serif;
+      letter-spacing: 0;
+    }
+
+    button, input, select, textarea { font: inherit; }
+    button, a { -webkit-tap-highlight-color: transparent; }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      min-height: 82px;
+      padding: 10px clamp(16px, 3vw, 34px);
+      border-bottom: 1px solid rgba(216, 226, 239, .9);
+      background: rgba(243, 246, 250, .95);
+      backdrop-filter: blur(14px);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      min-width: 0;
+      gap: 12px;
+    }
+
+    .emblem {
+      display: grid;
+      place-items: center;
+      width: 58px;
+      height: 58px;
+      flex: 0 0 auto;
+      border-radius: 50%;
+      background: #fff;
+      box-shadow: 0 7px 18px rgba(242, 90, 19, .12);
+    }
+
+    .emblem svg { width: 100%; height: 100%; display: block; }
+
+    .brand-copy { min-width: 0; }
+    .company-name {
+      margin: 0;
+      color: #0f172a;
+      font-size: clamp(18px, 2.2vw, 28px);
+      font-weight: 950;
+      line-height: 1;
+      letter-spacing: .14em;
+      white-space: nowrap;
+    }
+
+    .company-line {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 4px;
+      font-size: 12px;
+      font-weight: 850;
+      line-height: 1.1;
+    }
+
+    .company-line strong { color: #f25a13; }
+    .project-line { margin-top: 3px; font-size: 12px; font-weight: 700; }
+
+    .top-actions {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .button,
+    .link-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 38px;
+      padding: 0 13px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      color: var(--ink);
+      background: var(--panel);
+      font-weight: 800;
+      text-decoration: none;
+      cursor: pointer;
+      box-shadow: 0 5px 14px rgba(28, 43, 64, .05);
+    }
+
+    .button:hover, .link-button:hover { border-color: #9db5d1; }
+    .button.primary { color: #fff; border-color: var(--blue); background: var(--blue); }
+    .button.green, .link-button.green { color: var(--green); border-color: #b8dcc4; background: var(--green-soft); }
+    .button.ghost { background: transparent; box-shadow: none; }
+    .button.danger { color: var(--red); }
+    .button:disabled { opacity: .55; cursor: not-allowed; }
+
+    .connection-pill {
+      display: inline-flex;
+      align-items: center;
+      min-height: 38px;
+      padding: 0 11px;
+      border: 1px solid #ecd49f;
+      border-radius: var(--radius);
+      color: var(--amber);
+      background: var(--amber-soft);
+      font-size: 12px;
+      font-weight: 850;
+    }
+
+    .connection-pill.live { color: var(--green); border-color: #b8dcc4; background: var(--green-soft); }
+    .connection-pill.error { color: var(--red); border-color: #f4beb8; background: var(--red-soft); }
+
+    main {
+      width: min(1540px, 100%);
+      margin: 0 auto;
+      padding: 26px clamp(16px, 3vw, 34px) 110px;
+    }
+
+    .page-head {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 20px;
+      margin-bottom: 18px;
+    }
+
+    .eyebrow {
+      margin: 0 0 5px;
+      color: var(--blue);
+      font-size: 12px;
+      font-weight: 900;
+      text-transform: uppercase;
+    }
+
+    h1, h2, h3, p { margin-top: 0; }
+    .page-head h1 { margin-bottom: 4px; font-size: clamp(25px, 3vw, 38px); line-height: 1.1; }
+    .page-head p { margin-bottom: 0; color: var(--muted); }
+
+    .record-meta {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 750;
+      white-space: nowrap;
+    }
+
+    .workspace {
+      display: grid;
+      grid-template-columns: 280px minmax(0, 1fr);
+      gap: 18px;
+      align-items: start;
+    }
+
+    .sidebar {
+      position: sticky;
+      top: 100px;
+      display: grid;
+      gap: 14px;
+    }
+
+    .side-panel,
+    .form-shell {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel);
+      box-shadow: var(--shadow);
+    }
+
+    .side-panel { padding: 16px; }
+    .side-panel h2 { margin-bottom: 4px; font-size: 16px; }
+    .side-panel > p { margin-bottom: 14px; color: var(--muted); font-size: 12px; }
+
+    .equipment-snapshot { display: grid; gap: 10px; }
+    .snapshot-row { display: grid; gap: 2px; padding-bottom: 9px; border-bottom: 1px solid #e8eef5; }
+    .snapshot-row:last-child { padding-bottom: 0; border-bottom: 0; }
+    .snapshot-row span { color: var(--muted); font-size: 11px; }
+    .snapshot-row strong { overflow-wrap: anywhere; font-size: 13px; }
+
+    .recent-list { display: grid; gap: 8px; }
+    .recent-empty { color: var(--muted); font-size: 12px; }
+    .recent-item { padding: 9px 0; border-bottom: 1px solid #e8eef5; }
+    .recent-item:last-child { border-bottom: 0; }
+    .recent-item strong { display: block; font-size: 13px; }
+    .recent-item span { display: block; margin-top: 2px; color: var(--muted); font-size: 11px; }
+
+    .form-shell { overflow: hidden; }
+    .form-section { padding: 21px 22px 23px; border-bottom: 1px solid var(--line); }
+    .form-section:last-of-type { border-bottom: 0; }
+    .section-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 15px; }
+    .section-head h2 { margin-bottom: 3px; font-size: 18px; }
+    .section-head p { margin-bottom: 0; color: var(--muted); font-size: 12px; }
+    .section-number {
+      display: grid;
+      place-items: center;
+      width: 28px;
+      height: 28px;
+      flex: 0 0 auto;
+      border-radius: 50%;
+      color: var(--blue);
+      background: #e9f1fb;
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .section-title { display: flex; align-items: flex-start; gap: 10px; }
+    .field-grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 14px; }
+    .field { grid-column: span 3; display: grid; gap: 6px; min-width: 0; }
+    .field.span-2 { grid-column: span 2; }
+    .field.span-4 { grid-column: span 4; }
+    .field.span-6 { grid-column: span 6; }
+    .field.span-8 { grid-column: span 8; }
+    .field.span-12 { grid-column: 1 / -1; }
+
+    label, .field-label { color: #40506a; font-size: 12px; font-weight: 800; }
+    .required::after { content: " *"; color: var(--red); }
+    input, select, textarea {
+      width: 100%;
+      min-height: 40px;
+      border: 1px solid #cfdbea;
+      border-radius: 6px;
+      color: var(--ink);
+      background: #fff;
+      outline: none;
+    }
+
+    input, select { padding: 0 10px; }
+    textarea { min-height: 92px; padding: 10px; resize: vertical; }
+    input:focus, select:focus, textarea:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(20, 86, 160, .11); }
+    input[readonly] { color: #4a5b75; background: #f5f8fc; }
+    .field small { min-height: 14px; color: var(--muted); font-size: 10px; }
+
+    .status-control { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+    .status-control label { position: relative; cursor: pointer; }
+    .status-control input { position: absolute; opacity: 0; pointer-events: none; }
+    .status-option {
+      display: grid;
+      place-items: center;
+      min-height: 40px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #fff;
+      color: var(--muted);
+      font-weight: 850;
+    }
+
+    .status-control input:checked + .status-option.normal { color: var(--green); border-color: #8fc7a2; background: var(--green-soft); }
+    .status-control input:checked + .status-option.monitor { color: var(--amber); border-color: #dfbd75; background: var(--amber-soft); }
+    .status-control input:checked + .status-option.critical { color: var(--red); border-color: #e5a49d; background: var(--red-soft); }
+
+    .action-bar {
+      position: sticky;
+      bottom: 0;
+      z-index: 15;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 14px 18px;
+      border-top: 1px solid var(--line);
+      background: rgba(255, 255, 255, .96);
+      backdrop-filter: blur(12px);
+    }
+
+    .action-status { color: var(--muted); font-size: 12px; font-weight: 750; }
+    .action-buttons { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
+
+    dialog {
+      width: min(600px, calc(100% - 28px));
+      padding: 0;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      color: var(--ink);
+      background: #fff;
+      box-shadow: 0 28px 80px rgba(15, 32, 58, .25);
+    }
+
+    dialog::backdrop { background: rgba(15, 32, 58, .48); }
+    .dialog-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 18px 20px; border-bottom: 1px solid var(--line); }
+    .dialog-head h2 { margin: 0; font-size: 19px; }
+    .dialog-body { padding: 20px; }
+    .dialog-body p { color: var(--muted); font-size: 12px; }
+    .dialog-actions { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 8px; padding: 14px 20px; border-top: 1px solid var(--line); }
+
+    .toast {
+      position: fixed;
+      right: 22px;
+      bottom: 22px;
+      z-index: 80;
+      width: min(380px, calc(100% - 32px));
+      padding: 14px 16px;
+      border: 1px solid #b8dcc4;
+      border-radius: var(--radius);
+      color: var(--green);
+      background: var(--green-soft);
+      font-size: 13px;
+      font-weight: 800;
+      box-shadow: var(--shadow);
+      transform: translateY(140%);
+      transition: transform .22s ease;
+    }
+
+    .toast.show { transform: translateY(0); }
+    .toast.error { color: var(--red); border-color: #f4beb8; background: var(--red-soft); }
+
+    @media (max-width: 1060px) {
+      .workspace { grid-template-columns: 1fr; }
+      .sidebar { position: static; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .field { grid-column: span 4; }
+      .field.span-2 { grid-column: span 3; }
+    }
+
+    @media (max-width: 760px) {
+      .topbar { position: static; align-items: flex-start; flex-direction: column; gap: 10px; padding: 10px 16px; }
+      .emblem { width: 50px; height: 50px; }
+      .company-name { font-size: 17px; letter-spacing: .09em; }
+      .company-line, .project-line { font-size: 11px; }
+      .top-actions { display: grid; width: 100%; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .connection-pill { grid-column: 1 / -1; justify-content: center; }
+      .top-actions .button,
+      .top-actions .link-button { width: 100%; min-width: 0; padding: 0 8px; font-size: 12px; text-align: center; }
+      .top-actions #openSettings { grid-column: 1 / -1; }
+      .page-head { align-items: flex-start; flex-direction: column; }
+      .record-meta { white-space: normal; }
+      main { padding: 20px 14px 100px; }
+      .sidebar { grid-template-columns: 1fr; }
+      .form-section { padding: 18px 15px 20px; }
+      .field-grid { grid-template-columns: 1fr; }
+      .field, .field.span-2, .field.span-4, .field.span-6, .field.span-8, .field.span-12 { grid-column: 1; }
+      .section-head { align-items: flex-start; flex-direction: column; }
+      .action-bar { align-items: stretch; flex-direction: column; padding: 12px; }
+      .action-buttons { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .action-buttons .button { padding: 0 8px; font-size: 12px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand" aria-label="Italian-Thai Development Public Company Limited J.2411 Mae Moh Mine Phase 9">
+      <div class="emblem" aria-hidden="true">
+        <svg viewBox="0 0 120 120" focusable="false">
+          <circle cx="60" cy="60" r="55" fill="#fff" stroke="#f25a13" stroke-width="7" />
+          <circle cx="60" cy="60" r="45" fill="none" stroke="#f25a13" stroke-width="5" />
+          <path d="M42 29H64C86 29 101 43 101 60S86 91 64 91H42Z" fill="#fff" stroke="#f25a13" stroke-width="11" stroke-linejoin="round" />
+          <path d="M31 34C22 41 17 50 17 60S22 79 31 86L39 75C35 71 33 66 33 60S35 49 39 45Z" fill="#f25a13" />
+          <path d="M50 40H84V53H73V91H61V53H50Z" fill="#f25a13" />
+        </svg>
+      </div>
+      <div class="brand-copy">
+        <div class="company-name">ITALIAN-THAI</div>
+        <div class="company-line"><strong>DEVELOPMENT</strong><span>Public Company Limited</span></div>
+        <div class="project-line">J.2411 Mae Moh Mine Phase 9</div>
+      </div>
+    </div>
+    <div class="top-actions">
+      <span class="connection-pill" id="connectionPill">ยังไม่เชื่อมต่อ</span>
+      <a class="link-button" href="oil-analysis-dashboard-google-sheets.html">Dashboard</a>
+      <a class="link-button green" href="https://docs.google.com/spreadsheets/d/1isHfZCHRwdIBwqmMNikToWkdQEg63Oquxh9lrsUxojY/edit" target="_blank" rel="noopener noreferrer">Google Sheets</a>
+      <button class="button" id="openSettings" type="button">ตั้งค่าการเชื่อมต่อ</button>
+    </div>
+  </header>
+
+  <main>
+    <section class="page-head">
+      <div>
+        <p class="eyebrow">Oil Analysis / Data Entry</p>
+        <h1>บันทึกผลทดสอบน้ำมัน</h1>
+        <p>J.2411 Mae Moh Mine Phase 9</p>
+      </div>
+      <div class="record-meta"><span id="catalogCount">44 machines</span><span>•</span><span id="draftStatus">พร้อมกรอกข้อมูล</span></div>
+    </section>
+
+    <div class="workspace">
+      <aside class="sidebar">
+        <section class="side-panel">
+          <h2>Equipment</h2>
+          <p>ข้อมูลอ้างอิงของจุดเก็บตัวอย่าง</p>
+          <div class="equipment-snapshot">
+            <div class="snapshot-row"><span>Machine</span><strong id="snapshotMachine">-</strong></div>
+            <div class="snapshot-row"><span>Gearbox Position</span><strong id="snapshotPosition">-</strong></div>
+            <div class="snapshot-row"><span>EP-CODE</span><strong id="snapshotEpCode">-</strong></div>
+            <div class="snapshot-row"><span>Oil Grade</span><strong id="snapshotIsoVG">-</strong></div>
+          </div>
+        </section>
+        <section class="side-panel">
+          <h2>Recent submissions</h2>
+          <p>รายการที่ส่งจากอุปกรณ์นี้ล่าสุด</p>
+          <div class="recent-list" id="recentList"></div>
+        </section>
+      </aside>
+
+      <form class="form-shell" id="oilForm" novalidate>
+        <section class="form-section">
+          <div class="section-head">
+            <div class="section-title"><span class="section-number">1</span><div><h2>Equipment Reference</h2><p>เครื่องจักร ตำแหน่ง และข้อมูลอุปกรณ์</p></div></div>
+          </div>
+          <div class="field-grid">
+            <div class="field span-4"><label class="required" for="group">Group</label><select id="group" name="group" required></select><small></small></div>
+            <div class="field span-4"><label class="required" for="machine">Machine</label><select id="machine" name="machine" required></select><small></small></div>
+            <div class="field span-4"><label class="required" for="position">Gearbox Position</label><select id="position" name="position" required></select><small></small></div>
+            <div class="field span-4"><label class="required" for="epCode">EP-CODE</label><input id="epCode" name="epCode" required autocomplete="off"><small>แก้ไขได้เมื่อมีการเปลี่ยนอุปกรณ์</small></div>
+            <div class="field span-8"><label for="description">Description</label><input id="description" name="description" autocomplete="off"><small></small></div>
+            <div class="field span-4"><label for="brand">Brand</label><input id="brand" name="brand" autocomplete="off"><small></small></div>
+            <div class="field span-4"><label for="model">Model</label><input id="model" name="model" autocomplete="off"><small></small></div>
+            <div class="field span-4"><label for="serialNumber">S/N</label><input id="serialNumber" name="serialNumber" autocomplete="off"><small></small></div>
+            <input id="dashboardStatus" name="dashboardStatus" type="hidden">
+          </div>
+        </section>
+
+        <section class="form-section">
+          <div class="section-head">
+            <div class="section-title"><span class="section-number">2</span><div><h2>Sample & Status</h2><p>ข้อมูลตัวอย่าง ชั่วโมงน้ำมัน และสถานะผลทดสอบ</p></div></div>
+          </div>
+          <div class="field-grid">
+            <div class="field span-3"><label class="required" for="sampleDate">Sample Date</label><input id="sampleDate" name="sampleDate" type="date" required><small></small></div>
+            <div class="field span-3"><label for="sampleNumber">Sample Number</label><input id="sampleNumber" name="sampleNumber" inputmode="numeric" autocomplete="off"><small></small></div>
+            <div class="field span-3"><label for="oilHours">Oil Hours</label><input id="oilHours" name="oilHours" inputmode="decimal" autocomplete="off"><small>hr</small></div>
+            <div class="field span-3"><label for="oilVolume">Oil Volume</label><input id="oilVolume" name="oilVolume" autocomplete="off"><small>L</small></div>
+            <div class="field span-3"><label for="isoVG">ISO VG</label><input id="isoVG" name="isoVG" inputmode="decimal" autocomplete="off"><small></small></div>
+            <div class="field span-6"><span class="field-label required">New Status</span>
+              <div class="status-control">
+                <label><input type="radio" name="newStatus" value="Normal" checked required><span class="status-option normal">Normal</span></label>
+                <label><input type="radio" name="newStatus" value="Monitor"><span class="status-option monitor">Monitor</span></label>
+                <label><input type="radio" name="newStatus" value="Critical"><span class="status-option critical">Critical</span></label>
+              </div><small></small>
+            </div>
+            <div class="field span-3"><label for="iso4406">ISO 4406</label><input id="iso4406" name="iso4406" placeholder="18/16/13" autocomplete="off"><small></small></div>
+          </div>
+        </section>
+
+        <section class="form-section">
+          <div class="section-head">
+            <div class="section-title"><span class="section-number">3</span><div><h2>Viscosity & Oxidation</h2><p>คุณสมบัติทางกายภาพและการเสื่อมสภาพของน้ำมัน</p></div></div>
+          </div>
+          <div class="field-grid">
+            <div class="field"><label for="viscosity40">Viscosity @40°C</label><input id="viscosity40" name="viscosity40" inputmode="decimal" autocomplete="off"><small>cSt</small></div>
+            <div class="field"><label for="viscosity100">Viscosity @100°C</label><input id="viscosity100" name="viscosity100" inputmode="decimal" autocomplete="off"><small>cSt</small></div>
+            <div class="field"><label for="viscosityIndex">Viscosity Index</label><input id="viscosityIndex" name="viscosityIndex" inputmode="decimal" autocomplete="off"><small></small></div>
+            <div class="field"><label for="tan">TAN</label><input id="tan" name="tan" inputmode="decimal" autocomplete="off"><small>mgKOH/g</small></div>
+            <div class="field"><label for="oxidation">Oxidation</label><input id="oxidation" name="oxidation" inputmode="decimal" autocomplete="off"><small></small></div>
+          </div>
+        </section>
+
+        <section class="form-section">
+          <div class="section-head">
+            <div class="section-title"><span class="section-number">4</span><div><h2>Wear Metals</h2><p>ธาตุโลหะสึกหรอ</p></div></div>
+          </div>
+          <div class="field-grid">
+            <div class="field"><label for="fe">Iron [Fe]</label><input id="fe" name="fe" inputmode="decimal" autocomplete="off"><small>ppm</small></div>
+            <div class="field"><label for="cr">Chromium [Cr]</label><input id="cr" name="cr" inputmode="decimal" autocomplete="off"><small>ppm</small></div>
+            <div class="field"><label for="sn">Tin [Sn]</label><input id="sn" name="sn" inputmode="decimal" autocomplete="off"><small>ppm</small></div>
+            <div class="field"><label for="pb">Lead [Pb]</label><input id="pb" name="pb" inputmode="decimal" autocomplete="off"><small>ppm</small></div>
+            <div class="field"><label for="cu">Copper [Cu]</label><input id="cu" name="cu" inputmode="decimal" autocomplete="off"><small>ppm</small></div>
+            <div class="field"><label for="ni">Nickel [Ni]</label><input id="ni" name="ni" inputmode="decimal" autocomplete="off"><small>ppm</small></div>
+            <div class="field"><label for="al">Aluminium [Al]</label><input id="al" name="al" inputmode="decimal" autocomplete="off"><small>ppm</small></div>
+          </div>
+        </section>
+
+        <section class="form-section">
+          <div class="section-head">
+            <div class="section-title"><span class="section-number">5</span><div><h2>Contamination & Additives</h2><p>น้ำ ฝุ่น และธาตุสารเติมแต่ง</p></div></div>
+          </div>
+          <div class="field-grid">
+            <div class="field"><label for="water">Water</label><input id="water" name="water" inputmode="decimal" autocomplete="off"><small>%</small></div>
+            <div class="field"><label for="silicon">Silicon [Si]</label><input id="silicon" name="silicon" inputmode="decimal" autocomplete="off"><small>ppm</small></div>
+            <div class="field"><label for="sodium">Sodium [Na]</label><input id="sodium" name="sodium" inputmode="decimal" autocomplete="off"><small>ppm</small></div>
+            <div class="field"><label for="phosphorus">Phosphorus [P]</label><input id="phosphorus" name="phosphorus" inputmode="decimal" autocomplete="off"><small>ppm</small></div>
+          </div>
+        </section>
+
+        <section class="form-section">
+          <div class="section-head">
+            <div class="section-title"><span class="section-number">6</span><div><h2>Particle Count</h2><p>จำนวนอนุภาคตามขนาด</p></div></div>
+          </div>
+          <div class="field-grid">
+            <div class="field span-2"><label for="particle4">&gt;4µ</label><input id="particle4" name="particle4" inputmode="numeric" autocomplete="off"><small>count</small></div>
+            <div class="field span-2"><label for="particle6">&gt;6µ</label><input id="particle6" name="particle6" inputmode="numeric" autocomplete="off"><small>count</small></div>
+            <div class="field span-2"><label for="particle14">&gt;14µ</label><input id="particle14" name="particle14" inputmode="numeric" autocomplete="off"><small>count</small></div>
+            <div class="field span-2"><label for="particle21">&gt;21µ</label><input id="particle21" name="particle21" inputmode="numeric" autocomplete="off"><small>count</small></div>
+            <div class="field span-2"><label for="particle38">&gt;38µ</label><input id="particle38" name="particle38" inputmode="numeric" autocomplete="off"><small>count</small></div>
+            <div class="field span-2"><label for="particle70">&gt;70µ</label><input id="particle70" name="particle70" inputmode="numeric" autocomplete="off"><small>count</small></div>
+          </div>
+        </section>
+
+        <section class="form-section">
+          <div class="section-head">
+            <div class="section-title"><span class="section-number">7</span><div><h2>Assessment</h2><p>ผลวิเคราะห์ แนวทางดำเนินการ และผู้บันทึก</p></div></div>
+          </div>
+          <div class="field-grid">
+            <div class="field span-6"><label for="diagnosis">Diagnosis</label><textarea id="diagnosis" name="diagnosis"></textarea><small></small></div>
+            <div class="field span-6"><label for="recommendedAction">Recommended Action</label><textarea id="recommendedAction" name="recommendedAction"></textarea><small></small></div>
+            <div class="field span-4"><label for="nextSampleDate">Next Sample Date</label><input id="nextSampleDate" name="nextSampleDate" type="date"><small></small></div>
+            <div class="field span-4"><label class="required" for="updatedBy">Updated By</label><input id="updatedBy" name="updatedBy" required autocomplete="name"><small></small></div>
+            <div class="field span-12"><label for="notes">Notes</label><textarea id="notes" name="notes"></textarea><small></small></div>
+          </div>
+        </section>
+
+        <div class="action-bar">
+          <span class="action-status" id="actionStatus">ยังไม่ได้บันทึก</span>
+          <div class="action-buttons">
+            <button class="button ghost" id="clearButton" type="button">ล้างข้อมูล</button>
+            <button class="button" id="draftButton" type="button">บันทึกร่าง</button>
+            <button class="button primary" id="submitButton" type="submit">ส่งเข้า Google Sheets</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </main>
+
+  <dialog id="settingsDialog">
+    <div class="dialog-head"><h2>Google Sheets Connection</h2><button class="button ghost" id="closeSettings" type="button">ปิด</button></div>
+    <div class="dialog-body">
+      <p>Google Apps Script Web App URL</p>
+      <div class="field span-12"><label class="required" for="webAppUrl">Deployment URL</label><input id="webAppUrl" type="url" placeholder="https://script.google.com/macros/s/.../exec" autocomplete="off"><small id="connectionDetail"></small></div>
+    </div>
+    <div class="dialog-actions"><button class="button" id="testConnection" type="button">ทดสอบ</button><button class="button primary" id="saveConnection" type="button">บันทึกการเชื่อมต่อ</button></div>
+  </dialog>
+
+  <iframe id="submitTarget" name="submitTarget" title="Google Sheets submission" hidden></iframe>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script src="data/oil-analysis-equipment-catalog.js"></script>
+  <script>
+    const SHEET_URL = "https://docs.google.com/spreadsheets/d/1isHfZCHRwdIBwqmMNikToWkdQEg63Oquxh9lrsUxojY/edit";
+    const ENDPOINT_KEY = "oilAnalysisWebAppUrl";
+    const DRAFT_KEY = "oilAnalysisEntryDraft";
+    const HISTORY_KEY = "oilAnalysisEntryHistory";
+    const catalog = Array.isArray(window.OIL_EQUIPMENT_CATALOG) ? window.OIL_EQUIPMENT_CATALOG : [];
+
+    const form = document.getElementById("oilForm");
+    const groupSelect = document.getElementById("group");
+    const machineSelect = document.getElementById("machine");
+    const positionSelect = document.getElementById("position");
+    const submitButton = document.getElementById("submitButton");
+    const settingsDialog = document.getElementById("settingsDialog");
+    const webAppUrlInput = document.getElementById("webAppUrl");
+    const submitTarget = document.getElementById("submitTarget");
+    let pendingRequestId = "";
+    let submitTimeout = null;
+
+    function unique(values) {
+      return [...new Set(values.filter(Boolean))];
+    }
+
+    function optionHtml(values, selected = "") {
+      return values.map(value => `<option value="${escapeHtml(value)}" ${value === selected ? "selected" : ""}>${escapeHtml(value)}</option>`).join("");
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+
+    function machinesForGroup(group) {
+      return unique(catalog.filter(item => item.group === group).map(item => item.machine));
+    }
+
+    function pointsForMachine(machine) {
+      return catalog.filter(item => item.machine === machine);
+    }
+
+    function currentPoint() {
+      return catalog.find(item => item.machine === machineSelect.value && item.position === positionSelect.value) || null;
+    }
+
+    function populateGroups(selected) {
+      const groups = unique(catalog.map(item => item.group));
+      groupSelect.innerHTML = optionHtml(groups, selected || groups[0]);
+      populateMachines();
+    }
+
+    function populateMachines(selected) {
+      const machines = machinesForGroup(groupSelect.value);
+      machineSelect.innerHTML = optionHtml(machines, selected || machines[0]);
+      populatePositions();
+    }
+
+    function populatePositions(selected) {
+      const positions = pointsForMachine(machineSelect.value).map(item => item.position);
+      positionSelect.innerHTML = optionHtml(positions, selected || positions[0]);
+      applyEquipmentReference();
+    }
+
+    function applyEquipmentReference() {
+      const point = currentPoint();
+      if (!point) return;
+      ["epCode", "description", "brand", "model", "serialNumber", "dashboardStatus", "oilVolume", "isoVG"].forEach(key => {
+        const element = form.elements[key];
+        if (element) element.value = point[key] || "";
+      });
+      document.getElementById("snapshotMachine").textContent = point.machine || "-";
+      document.getElementById("snapshotPosition").textContent = point.position || "-";
+      document.getElementById("snapshotEpCode").textContent = point.epCode || "-";
+      document.getElementById("snapshotIsoVG").textContent = point.isoVG ? `ISO VG ${point.isoVG}` : "-";
+    }
+
+    function formValues() {
+      return Object.fromEntries(new FormData(form).entries());
+    }
+
+    function setToday() {
+      if (!form.elements.sampleDate.value) {
+        const today = new Date();
+        const local = new Date(today.getTime() - today.getTimezoneOffset() * 60000);
+        form.elements.sampleDate.value = local.toISOString().slice(0, 10);
+      }
+    }
+
+    function saveDraft(showMessage = true) {
+      localStorage.setItem(DRAFT_KEY, JSON.stringify(formValues()));
+      document.getElementById("draftStatus").textContent = "มีฉบับร่างในเครื่อง";
+      document.getElementById("actionStatus").textContent = `บันทึกร่าง ${new Date().toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit" })}`;
+      if (showMessage) showToast("บันทึกฉบับร่างในเครื่องแล้ว");
+    }
+
+    function restoreDraft() {
+      const raw = localStorage.getItem(DRAFT_KEY);
+      if (!raw) return false;
+      try {
+        const draft = JSON.parse(raw);
+        populateGroups(draft.group);
+        populateMachines(draft.machine);
+        populatePositions(draft.position);
+        Object.entries(draft).forEach(([key, value]) => {
+          const element = form.elements[key];
+          if (!element) return;
+          if (element instanceof RadioNodeList) element.value = value;
+          else element.value = value;
+        });
+        applyEquipmentSnapshotOnly();
+        document.getElementById("draftStatus").textContent = "กู้คืนฉบับร่างแล้ว";
+        return true;
+      } catch (error) {
+        localStorage.removeItem(DRAFT_KEY);
+        return false;
+      }
+    }
+
+    function applyEquipmentSnapshotOnly() {
+      document.getElementById("snapshotMachine").textContent = machineSelect.value || "-";
+      document.getElementById("snapshotPosition").textContent = positionSelect.value || "-";
+      document.getElementById("snapshotEpCode").textContent = form.elements.epCode.value || "-";
+      document.getElementById("snapshotIsoVG").textContent = form.elements.isoVG.value ? `ISO VG ${form.elements.isoVG.value}` : "-";
+    }
+
+    function clearMeasurementFields() {
+      const keep = new Set(["group", "machine", "position", "epCode", "description", "brand", "model", "serialNumber", "dashboardStatus", "oilVolume", "isoVG", "updatedBy"]);
+      [...form.elements].forEach(element => {
+        if (!element.name || keep.has(element.name) || element.type === "radio") return;
+        element.value = "";
+      });
+      form.elements.newStatus.value = "Normal";
+      setToday();
+      localStorage.removeItem(DRAFT_KEY);
+      document.getElementById("draftStatus").textContent = "พร้อมกรอกข้อมูล";
+      document.getElementById("actionStatus").textContent = "ยังไม่ได้บันทึก";
+    }
+
+    function endpointUrl() {
+      return localStorage.getItem(ENDPOINT_KEY) || "";
+    }
+
+    function isValidEndpoint(url) {
+      return /^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec(?:\?.*)?$/.test(String(url || "").trim());
+    }
+
+    function setConnectionState(state, text) {
+      const pill = document.getElementById("connectionPill");
+      pill.className = `connection-pill ${state || ""}`.trim();
+      pill.textContent = text;
+    }
+
+    function refreshConnectionState() {
+      const url = endpointUrl();
+      webAppUrlInput.value = url;
+      setConnectionState(url ? "live" : "", url ? "ตั้งค่า Web App แล้ว" : "ยังไม่เชื่อมต่อ");
+    }
+
+    function saveConnection() {
+      const url = webAppUrlInput.value.trim();
+      if (!isValidEndpoint(url)) {
+        document.getElementById("connectionDetail").textContent = "URL ต้องลงท้ายด้วย /exec";
+        webAppUrlInput.focus();
+        return;
+      }
+      localStorage.setItem(ENDPOINT_KEY, url);
+      refreshConnectionState();
+      showToast("บันทึก Web App URL แล้ว");
+      testConnection();
+    }
+
+    function testConnection() {
+      const url = webAppUrlInput.value.trim() || endpointUrl();
+      const detail = document.getElementById("connectionDetail");
+      if (!isValidEndpoint(url)) {
+        detail.textContent = "กรอก Deployment URL ก่อนทดสอบ";
+        return;
+      }
+
+      const callbackName = `oilSheetHealth_${Date.now()}`;
+      const script = document.createElement("script");
+      let finished = false;
+      const cleanup = () => {
+        delete window[callbackName];
+        script.remove();
+      };
+      const timer = setTimeout(() => {
+        if (finished) return;
+        finished = true;
+        cleanup();
+        setConnectionState("error", "เชื่อมต่อไม่สำเร็จ");
+        detail.textContent = "ตรวจสอบ Deployment และสิทธิ์การเข้าถึง Web App";
+      }, 10000);
+
+      window[callbackName] = payload => {
+        if (finished) return;
+        finished = true;
+        clearTimeout(timer);
+        cleanup();
+        if (payload && payload.ok) {
+          localStorage.setItem(ENDPOINT_KEY, url);
+          setConnectionState("live", "Google Sheets พร้อมบันทึก");
+          detail.textContent = "เชื่อมต่อ Oil Analysis Data Entry แล้ว";
+        } else {
+          setConnectionState("error", "เชื่อมต่อไม่สำเร็จ");
+          detail.textContent = "Web App ตอบกลับไม่ถูกต้อง";
+        }
+      };
+      script.onerror = () => {
+        if (finished) return;
+        finished = true;
+        clearTimeout(timer);
+        cleanup();
+        setConnectionState("error", "เชื่อมต่อไม่สำเร็จ");
+        detail.textContent = "ไม่สามารถเปิด Web App URL นี้ได้";
+      };
+      detail.textContent = "กำลังทดสอบการเชื่อมต่อ...";
+      script.src = `${url}${url.includes("?") ? "&" : "?"}action=health&callback=${callbackName}&t=${Date.now()}`;
+      document.head.appendChild(script);
+    }
+
+    function submitToSheet(payload) {
+      const url = endpointUrl();
+      if (!isValidEndpoint(url)) {
+        settingsDialog.showModal();
+        showToast("ตั้งค่า Google Apps Script Web App URL ก่อนส่งข้อมูล", true);
+        return;
+      }
+
+      pendingRequestId = window.crypto && crypto.randomUUID ? crypto.randomUUID() : `oil-${Date.now()}`;
+      payload.requestId = pendingRequestId;
+      const postForm = document.createElement("form");
+      postForm.method = "post";
+      postForm.action = url;
+      postForm.target = submitTarget.name;
+      postForm.style.display = "none";
+      const input = document.createElement("input");
+      input.type = "hidden";
+      input.name = "payload";
+      input.value = JSON.stringify(payload);
+      postForm.appendChild(input);
+      document.body.appendChild(postForm);
+
+      submitButton.disabled = true;
+      setConnectionState("live", "กำลังบันทึก Google Sheets");
+      document.getElementById("actionStatus").textContent = "กำลังส่งข้อมูล...";
+      postForm.submit();
+      postForm.remove();
+
+      clearTimeout(submitTimeout);
+      submitTimeout = setTimeout(() => {
+        if (!pendingRequestId) return;
+        submitButton.disabled = false;
+        pendingRequestId = "";
+        setConnectionState("error", "ไม่พบผลตอบกลับ");
+        document.getElementById("actionStatus").textContent = "โปรดตรวจสอบข้อมูลใน Google Sheets";
+        showToast("ไม่พบผลตอบกลับจาก Web App กรุณาตรวจสอบ Google Sheets", true);
+      }, 20000);
+    }
+
+    function addHistory(payload, result) {
+      const history = readHistory();
+      history.unshift({
+        machine: payload.machine,
+        position: payload.position,
+        epCode: payload.epCode,
+        sampleDate: payload.sampleDate,
+        status: payload.newStatus,
+        row: result && result.row,
+        timestamp: Date.now()
+      });
+      localStorage.setItem(HISTORY_KEY, JSON.stringify(history.slice(0, 8)));
+      renderHistory();
+    }
+
+    function readHistory() {
+      try { return JSON.parse(localStorage.getItem(HISTORY_KEY) || "[]"); }
+      catch (error) { return []; }
+    }
+
+    function renderHistory() {
+      const history = readHistory();
+      const list = document.getElementById("recentList");
+      if (!history.length) {
+        list.innerHTML = '<div class="recent-empty">ยังไม่มีรายการจากหน้านี้</div>';
+        return;
+      }
+      list.innerHTML = history.slice(0, 5).map(item => `
+        <div class="recent-item">
+          <strong>${escapeHtml(item.machine)} · ${escapeHtml(item.position)}</strong>
+          <span>${escapeHtml(item.epCode)} | ${escapeHtml(item.sampleDate)} | ${escapeHtml(item.status)}</span>
+        </div>
+      `).join("");
+    }
+
+    function showToast(message, isError = false) {
+      const toast = document.getElementById("toast");
+      toast.textContent = message;
+      toast.className = `toast ${isError ? "error" : ""} show`.trim();
+      clearTimeout(showToast.timer);
+      showToast.timer = setTimeout(() => { toast.className = "toast"; }, 4200);
+    }
+
+    window.addEventListener("message", event => {
+      if (event.source !== submitTarget.contentWindow) return;
+      const data = event.data;
+      if (!data || data.source !== "oil-analysis-entry" || data.requestId !== pendingRequestId) return;
+      clearTimeout(submitTimeout);
+      submitButton.disabled = false;
+      pendingRequestId = "";
+      if (data.ok) {
+        const payload = formValues();
+        addHistory(payload, data.result);
+        clearMeasurementFields();
+        setConnectionState("live", "บันทึก Google Sheets สำเร็จ");
+        document.getElementById("actionStatus").textContent = `${data.result.sheet} · Row ${data.result.row}`;
+        showToast(`บันทึก ${data.result.recordId} ลง Google Sheets แล้ว`);
+      } else {
+        setConnectionState("error", "บันทึกไม่สำเร็จ");
+        document.getElementById("actionStatus").textContent = data.error || "เกิดข้อผิดพลาด";
+        showToast(data.error || "ไม่สามารถบันทึก Google Sheets ได้", true);
+      }
+    });
+
+    groupSelect.addEventListener("change", () => populateMachines());
+    machineSelect.addEventListener("change", () => populatePositions());
+    positionSelect.addEventListener("change", applyEquipmentReference);
+    [form.elements.epCode, form.elements.isoVG].forEach(element => element.addEventListener("input", applyEquipmentSnapshotOnly));
+    document.getElementById("draftButton").addEventListener("click", () => saveDraft(true));
+    document.getElementById("clearButton").addEventListener("click", () => {
+      clearMeasurementFields();
+      showToast("ล้างค่าผลทดสอบแล้ว");
+    });
+    document.getElementById("openSettings").addEventListener("click", () => settingsDialog.showModal());
+    document.getElementById("closeSettings").addEventListener("click", () => settingsDialog.close());
+    document.getElementById("saveConnection").addEventListener("click", saveConnection);
+    document.getElementById("testConnection").addEventListener("click", testConnection);
+    settingsDialog.addEventListener("click", event => {
+      if (event.target === settingsDialog) settingsDialog.close();
+    });
+    form.addEventListener("submit", event => {
+      event.preventDefault();
+      if (!form.reportValidity()) {
+        showToast("กรอกช่องที่มีเครื่องหมาย * ให้ครบ", true);
+        return;
+      }
+      saveDraft(false);
+      submitToSheet(formValues());
+    });
+
+    const endpointFromUrl = new URLSearchParams(location.search).get("endpoint");
+    if (endpointFromUrl && isValidEndpoint(endpointFromUrl)) localStorage.setItem(ENDPOINT_KEY, endpointFromUrl);
+    document.getElementById("catalogCount").textContent = `${unique(catalog.map(item => item.machine)).length} machines · ${catalog.length} gearbox points`;
+    populateGroups();
+    if (!restoreDraft()) setToday();
+    applyEquipmentSnapshotOnly();
+    refreshConnectionState();
+    renderHistory();
+  </script>
+</body>
+</html>

@@ -219,6 +219,16 @@
       font-weight: 800;
     }
 
+    a.text-btn {
+      text-decoration: none;
+    }
+
+    .update-link {
+      color: #137333;
+      border-color: rgba(19, 115, 51, .24);
+      background: #e9f6ed;
+    }
+
     .icon-btn:hover,
     .text-btn:hover,
     .machine-tile:hover,
@@ -1074,6 +1084,17 @@
         justify-content: flex-start;
       }
 
+      .top-actions {
+        display: grid;
+        width: 100%;
+        grid-template-columns: minmax(0, 1fr) auto auto auto;
+        align-items: center;
+      }
+
+      .top-actions .sync-status {
+        grid-column: 1 / -1;
+      }
+
       .kpi-grid,
       .detail-kpis,
       .mini-grid,
@@ -1380,6 +1401,19 @@
       </div>
       <div class="top-actions">
         <span class="sync-status" id="syncStatus">Local data</span>
+        <a class="text-btn update-link" href="oil-analysis-data-entry.html" title="Open Oil Analysis Data Entry">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M4 20h4l11-11a2.8 2.8 0 0 0-4-4L4 16v4Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round" />
+            <path d="m13.5 6.5 4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+          </svg>
+          Update
+        </a>
+        <button class="icon-btn" id="syncButton" type="button" onclick="loadRealtimeReports(true)" title="Refresh Google Sheets">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M20 7v5h-5M4 17v-5h5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+            <path d="M6.1 9A7 7 0 0 1 18 6.2L20 8M4 16l2 1.8A7 7 0 0 0 17.9 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+          </svg>
+        </button>
         <button class="text-btn" type="button" onclick="window.print()" title="Export PDF">
           <svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true">
             <path d="M6 9V3h12v6M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
@@ -1885,8 +1919,16 @@
     let realtimeTimer = null;
     let realtimeLastUpdated = "";
 
+    const googleSheetConfig = {
+      spreadsheetId: "1isHfZCHRwdIBwqmMNikToWkdQEg63Oquxh9lrsUxojY",
+      sheetName: "Dashboard_Data",
+      editUrl: "https://docs.google.com/spreadsheets/d/1isHfZCHRwdIBwqmMNikToWkdQEg63Oquxh9lrsUxojY/edit",
+      dataUrl: "https://docs.google.com/spreadsheets/d/1isHfZCHRwdIBwqmMNikToWkdQEg63Oquxh9lrsUxojY/gviz/tq?tqx=out:csv&sheet=Dashboard_Data"
+    };
+
     const realtimeConfig = {
-      url: "data/oil-reports.json",
+      url: googleSheetConfig.dataUrl,
+      fallbackUrl: "data/oil-reports.json",
       intervalMs: 60000
     };
 
@@ -2055,7 +2097,7 @@
       const volume = estimateOilVolume(position);
       const nextAction = status === "critical" ? "3 วัน" : status === "monitor" ? "14 วัน" : "30 วัน";
       const epCode = (equipment.direct && equipment.epCode) || machineEpCodes[machine.name] || makeEpCode(machine.name, seed, index);
-      const report = actualOilReports[epCode];
+      const report = actualOilReports[`${machine.name}|${position}`] || actualOilReports[epCode];
 
       const point = {
         index,
@@ -2084,8 +2126,8 @@
       if (report) {
         Object.assign(point, report, {
           source: "Lab Report",
-          epCode,
-          oilHours: Number(String(report.lubricantLife).replace(/[^\d]/g, "")) || oilHours
+          epCode: report.epCode || epCode,
+          oilHours: Number(report.oilHours) || Number(String(report.lubricantLife).replace(/[^\d]/g, "")) || oilHours
         });
       }
 
@@ -2182,6 +2224,8 @@
 
     function particleCountValue(subject, size) {
       const counts = subject.particleCounts || {};
+      const standardKey = counts[`>${size}um`] || counts[`>${size}µm`];
+      if (standardKey !== undefined && standardKey !== null && standardKey !== "") return standardKey;
       return counts[`>${size}µ`] || counts[`>${size}ยต`] || "-";
     }
 
@@ -2192,13 +2236,321 @@
       el.className = `sync-status ${tone}`.trim();
     }
 
+    function parseCsv(text) {
+      const rows = [];
+      let row = [];
+      let field = "";
+      let quoted = false;
+      const source = String(text || "").replace(/^\uFEFF/, "");
+
+      for (let index = 0; index < source.length; index++) {
+        const char = source[index];
+        if (quoted) {
+          if (char === '"' && source[index + 1] === '"') {
+            field += '"';
+            index++;
+          } else if (char === '"') {
+            quoted = false;
+          } else {
+            field += char;
+          }
+        } else if (char === '"') {
+          quoted = true;
+        } else if (char === ",") {
+          row.push(field);
+          field = "";
+        } else if (char === "\n") {
+          row.push(field.replace(/\r$/, ""));
+          if (row.some(value => value !== "")) rows.push(row);
+          row = [];
+          field = "";
+        } else {
+          field += char;
+        }
+      }
+
+      row.push(field.replace(/\r$/, ""));
+      if (row.some(value => value !== "")) rows.push(row);
+      return rows;
+    }
+
+    function sheetNumber(value) {
+      const cleaned = String(value ?? "").replace(/,/g, "").match(/-?\d+(?:\.\d+)?/);
+      return cleaned ? Number(cleaned[0]) : null;
+    }
+
+    function sheetStatus(value) {
+      const status = String(value || "").trim().toLowerCase();
+      if (status.includes("critical") || status.includes("danger") || status.includes("วิกฤต")) return "critical";
+      if (status.includes("monitor") || status.includes("warning") || status.includes("ติดตาม") || status.includes("เฝ้า")) return "monitor";
+      return "normal";
+    }
+
+    function sheetDateInfo(value) {
+      const display = String(value || "").trim();
+      const match = display.match(/^(\d{1,2})[.\/-](\d{1,2})[.\/-](\d{2,4})/);
+      let timestamp = Date.parse(display);
+      if (match) {
+        let year = Number(match[3]);
+        if (year < 100) year += 2000;
+        timestamp = Date.UTC(year, Number(match[2]) - 1, Number(match[1]));
+      }
+      if (!Number.isFinite(timestamp)) timestamp = 0;
+      const date = timestamp ? new Date(timestamp) : null;
+      const label = date
+        ? new Intl.DateTimeFormat("en-US", { month: "short", year: "2-digit", timeZone: "UTC" }).format(date)
+        : display;
+      return { display, timestamp, label };
+    }
+
+    function sheetRiskScore(status) {
+      return status === "critical" ? 88 : status === "monitor" ? 62 : 34;
+    }
+
+    function valueOrDash(value) {
+      const text = String(value ?? "").trim();
+      return text || "-";
+    }
+
+    function isoRiskScore(value, fallback) {
+      const firstCode = sheetNumber(String(value || "").split("/")[0]);
+      return firstCode === null ? fallback : clamp((firstCode - 14) * 11 + 20, 18, 96);
+    }
+
+    function valueRiskScore(value, limit, fallback) {
+      const number = sheetNumber(value);
+      return number === null ? fallback : clamp((number / limit) * 70, 12, 96);
+    }
+
+    function viscosityRiskScore(value, isoVg, fallback) {
+      const viscosity = sheetNumber(value);
+      const target = sheetNumber(isoVg);
+      if (viscosity === null || target === null || target <= 0) return fallback;
+      return clamp(24 + (Math.abs(viscosity - target) / target) * 240, 18, 96);
+    }
+
+    function googleSheetRowsToPayload(csvText) {
+      const rows = parseCsv(csvText);
+      if (rows.length < 2) throw new Error("Google Sheets returned no data rows");
+
+      const normalizeHeader = value => String(value || "").trim().toLowerCase().replace(/\s+/g, " ");
+      const headers = rows[0].map(normalizeHeader);
+      const headerIndex = new Map(headers.map((name, index) => [name, index]));
+      const getCell = (row, ...names) => {
+        let fallback = "";
+        for (const name of names) {
+          const index = headerIndex.get(normalizeHeader(name));
+          if (index !== undefined) {
+            const value = String(row[index] ?? "").trim();
+            if (value) return value;
+            fallback = value;
+          }
+        }
+        return fallback;
+      };
+
+      const grouped = new Map();
+      rows.slice(1).forEach(row => {
+        const machine = getCell(row, "Machine");
+        const position = getCell(row, "Gearbox Position");
+        const sampleDate = getCell(row, "Sample Date");
+        if (!machine || !position || !sampleDate) return;
+
+        const status = sheetStatus(getCell(row, "New Status", "Dashboard Status"));
+        const date = sheetDateInfo(sampleDate);
+        const sample = {
+          machine,
+          position,
+          group: getCell(row, "Group"),
+          epCode: getCell(row, "EP-CODE", "EP Code"),
+          description: getCell(row, "Description"),
+          brand: getCell(row, "Brand"),
+          model: getCell(row, "Model"),
+          serialNumber: getCell(row, "S/N"),
+          status,
+          sampleDate: date.display,
+          dateTimestamp: date.timestamp,
+          dateLabel: date.label,
+          sampleNumber: getCell(row, "Sample Number"),
+          oilHours: sheetNumber(getCell(row, "Oil Hours (hr)", "Oil Hours")),
+          volume: getCell(row, "Oil Volume"),
+          isoVG: getCell(row, "ISO VG"),
+          iso: getCell(row, "ISO 4406"),
+          viscosity: sheetNumber(getCell(row, "Viscosity @40°C (cSt)", "Viscosity @40°C", "Viscosity @40C")),
+          viscosity100: sheetNumber(getCell(row, "Viscosity @100°C (cSt)", "Viscosity @100°C", "Viscosity @100C")),
+          viscosityIndex: sheetNumber(getCell(row, "Viscosity Index")),
+          tan: sheetNumber(getCell(row, "TAN (mgKOH/g)", "TAN")),
+          oxidation: getCell(row, "Oxidation"),
+          fe: getCell(row, "Fe (ppm)", "Fe"),
+          cr: getCell(row, "Cr (ppm)", "Cr"),
+          sn: getCell(row, "Sn (ppm)", "Sn"),
+          pb: getCell(row, "Pb (ppm)", "Pb"),
+          cu: getCell(row, "Cu (ppm)", "Cu"),
+          ni: getCell(row, "Ni (ppm)", "Ni"),
+          al: getCell(row, "Al (ppm)", "Al"),
+          water: getCell(row, "Water (%)", "Water"),
+          silicon: getCell(row, "Silicon [Si] (ppm)", "Silicon"),
+          sodium: getCell(row, "Sodium [Na] (ppm)", "Sodium"),
+          phosphorus: getCell(row, "Phosphorus [P] (ppm)", "Phosphorus"),
+          p4: getCell(row, "Particle >4µ", "Particle >4 µm", "Particle >4um"),
+          p6: getCell(row, "Particle >6µ", "Particle >6 µm", "Particle >6um"),
+          p14: getCell(row, "Particle >14µ", "Particle >14 µm", "Particle >14um"),
+          p21: getCell(row, "Particle >21µ", "Particle >21 µm", "Particle >21um"),
+          p38: getCell(row, "Particle >38µ", "Particle >38 µm", "Particle >38um"),
+          p70: getCell(row, "Particle >70µ", "Particle >70 µm", "Particle >70um"),
+          diagnosis: getCell(row, "Diagnosis"),
+          nextAction: getCell(row, "Recommended Action"),
+          nextSampleDate: getCell(row, "Next Sample Date"),
+          updatedBy: getCell(row, "Updated By"),
+          notes: getCell(row, "Notes")
+        };
+
+        const key = `${machine}|${position}`;
+        if (!grouped.has(key)) grouped.set(key, []);
+        grouped.get(key).push(sample);
+      });
+
+      const reports = {};
+      const epCodeKeys = new Map();
+      grouped.forEach((samples, key) => {
+        samples.sort((a, b) => a.dateTimestamp - b.dateTimestamp);
+        const trendSamples = samples.slice(-12);
+        const latest = samples[samples.length - 1];
+        const fallbackScore = sheetRiskScore(latest.status);
+        const months = trendSamples.map(sample => sample.dateLabel);
+        const trendValues = field => trendSamples.map(sample => sheetNumber(sample[field]) ?? 0);
+        const viscosityScores = trendSamples.map(sample => viscosityRiskScore(sample.viscosity, sample.isoVG, sheetRiskScore(sample.status)));
+        const wearScores = trendSamples.map(sample => valueRiskScore(sample.fe, 35, sheetRiskScore(sample.status)));
+        const particleScores = trendSamples.map(sample => isoRiskScore(sample.iso, sheetRiskScore(sample.status)));
+        const waterScores = trendSamples.map(sample => valueRiskScore(sample.water, 0.1, sheetRiskScore(sample.status)));
+        const health = latest.status === "critical" ? 52 : latest.status === "monitor" ? 70 : 86;
+        const report = {
+          actualReport: true,
+          machine: latest.machine,
+          position: latest.position,
+          epCode: latest.epCode,
+          sampleNumber: valueOrDash(latest.sampleNumber),
+          sampleDate: latest.sampleDate,
+          registeredLubricant: latest.isoVG ? `ISO VG ${latest.isoVG}` : "-",
+          lubricantLife: latest.oilHours === null ? "-" : `${latest.oilHours.toLocaleString()} hr`,
+          oilHours: latest.oilHours,
+          status: latest.status,
+          health,
+          iso: valueOrDash(latest.iso),
+          particleScore: Math.round(particleScores[particleScores.length - 1] || fallbackScore),
+          viscosity: latest.viscosity ?? 0,
+          viscosity100: latest.viscosity100 ?? 0,
+          viscosityIndex: latest.viscosityIndex ?? 0,
+          wear: sheetNumber(latest.fe) ?? 0,
+          feDisplay: valueOrDash(latest.fe),
+          cuDisplay: valueOrDash(latest.cu),
+          water: sheetNumber(latest.water) ?? 0,
+          waterDisplay: valueOrDash(latest.water),
+          tan: latest.tan ?? 0,
+          tanDisplay: valueOrDash(latest.tan),
+          sodium: valueOrDash(latest.sodium),
+          silicon: valueOrDash(latest.silicon),
+          phosphorus: valueOrDash(latest.phosphorus),
+          oxidation: valueOrDash(latest.oxidation),
+          description: valueOrDash(latest.description),
+          brand: valueOrDash(latest.brand),
+          model: valueOrDash(latest.model),
+          serialNumber: valueOrDash(latest.serialNumber),
+          volume: valueOrDash(latest.volume),
+          isoVG: valueOrDash(latest.isoVG),
+          particleCounts: {
+            ">4um": valueOrDash(latest.p4),
+            ">6um": valueOrDash(latest.p6),
+            ">14um": valueOrDash(latest.p14),
+            ">21um": valueOrDash(latest.p21),
+            ">38um": valueOrDash(latest.p38),
+            ">70um": valueOrDash(latest.p70)
+          },
+          diagnosis: valueOrDash(latest.diagnosis),
+          nextAction: valueOrDash(latest.nextAction),
+          nextSampleDate: valueOrDash(latest.nextSampleDate),
+          updatedBy: valueOrDash(latest.updatedBy),
+          notes: valueOrDash(latest.notes),
+          trend: {
+            months,
+            physicalOxidation: viscosityScores,
+            viscosity: viscosityScores,
+            wear: wearScores,
+            particleContamination: particleScores,
+            particles: particleScores,
+            waterContamination: waterScores,
+            subTrends: {
+              physicalOxidation: [
+                { label: "Viscosity 40°C", unit: "cSt", color: "#1456a0", values: trendValues("viscosity") },
+                { label: "Viscosity 100°C", unit: "cSt", color: "#087f83", values: trendValues("viscosity100") },
+                { label: "Viscosity Index", unit: "", color: "#b87503", values: trendValues("viscosityIndex") }
+              ],
+              wear: [
+                { label: "Iron [Fe]", unit: "ppm", color: "#b42318", values: trendValues("fe") },
+                { label: "Chromium [Cr]", unit: "ppm", color: "#7c3aed", values: trendValues("cr") },
+                { label: "Tin [Sn]", unit: "ppm", color: "#0f766e", values: trendValues("sn") },
+                { label: "Lead [Pb]", unit: "ppm", color: "#92400e", values: trendValues("pb") },
+                { label: "Copper [Cu]", unit: "ppm", color: "#d97706", values: trendValues("cu") },
+                { label: "Nickel [Ni]", unit: "ppm", color: "#475569", values: trendValues("ni") },
+                { label: "Aluminium [Al]", unit: "ppm", color: "#0284c7", values: trendValues("al") }
+              ],
+              particleContamination: [
+                { label: "Water (%)", unit: "%", color: "#087f83", values: trendValues("water") },
+                { label: "Silicon [Si]", unit: "ppm", color: "#b87503", values: trendValues("silicon") }
+              ],
+              waterContamination: [
+                { label: "Water (%)", unit: "%", color: "#087f83", values: trendValues("water") },
+                { label: "Silicon [Si]", unit: "ppm", color: "#b87503", values: trendValues("silicon") }
+              ]
+            },
+            health
+          }
+        };
+
+        reports[key] = report;
+        if (latest.epCode) {
+          if (!epCodeKeys.has(latest.epCode)) epCodeKeys.set(latest.epCode, []);
+          epCodeKeys.get(latest.epCode).push(key);
+        }
+      });
+
+      epCodeKeys.forEach((keys, epCode) => {
+        if (keys.length === 1) reports[epCode] = reports[keys[0]];
+      });
+
+      return {
+        reports,
+        updatedAt: new Date().toISOString(),
+        samplePointCount: grouped.size
+      };
+    }
+
     function normalizeRealtimePayload(payload) {
       if (!payload || typeof payload !== "object") return null;
       const reports = payload.reports && typeof payload.reports === "object" ? payload.reports : payload;
       return {
         reports,
-        updatedAt: payload.updatedAt || payload.lastUpdated || new Date().toISOString()
+        updatedAt: payload.updatedAt || payload.lastUpdated || new Date().toISOString(),
+        samplePointCount: payload.samplePointCount
       };
+    }
+
+    function recalculateMachineHealth() {
+      const rank = { normal: 1, monitor: 2, critical: 3 };
+      machines.forEach(machine => {
+        const actualPoints = getOilPoints(machine).filter(point => point.actualReport);
+        if (!actualPoints.length) return;
+        const worstPoint = [...actualPoints].sort((a, b) => rank[b.status] - rank[a.status])[0];
+        machine.status = worstPoint.status;
+        machine.health = Math.round(actualPoints.reduce((sum, point) => sum + Number(point.health || 0), 0) / actualPoints.length);
+        machine.iso = worstPoint.iso;
+        machine.viscosity = worstPoint.viscosity;
+        machine.wear = Math.max(...actualPoints.map(point => Number(point.wear) || 0));
+        machine.particleScore = Math.max(...actualPoints.map(point => Number(point.particleScore) || 0));
+        machine.water = Math.max(...actualPoints.map(point => Number(point.water) || 0));
+        machine.tan = Math.max(...actualPoints.map(point => Number(point.tan) || 0));
+        machine.nextAction = worstPoint.nextAction;
+      });
     }
 
     function applyRealtimeReports(payload) {
@@ -2207,6 +2559,10 @@
 
       actualOilReports = { ...actualOilReports, ...normalized.reports };
       realtimeLastUpdated = normalized.updatedAt;
+      recalculateMachineHealth();
+      renderSummary();
+      renderGroups();
+      renderPriorityRows();
 
       if (selectedMachine) {
         const currentPointIndex = selectedOilPoint ? selectedOilPoint.index : 0;
@@ -2218,23 +2574,37 @@
         dateStyle: "short",
         timeStyle: "short"
       });
-      setSyncStatus(`Live ${timeText}`, "live");
+      const pointText = normalized.samplePointCount ? ` · ${normalized.samplePointCount} points` : "";
+      setSyncStatus(`Sheets live ${timeText}${pointText}`, "live");
       return true;
     }
 
-    async function loadRealtimeReports() {
-      if (location.protocol === "file:") {
-        setSyncStatus("Local file mode", "warn");
-        return;
-      }
+    async function fetchRealtimeSource(url) {
+      const separator = url.includes("?") ? "&" : "?";
+      const response = await fetch(`${url}${separator}t=${Date.now()}`, { cache: "no-store" });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const contentType = response.headers.get("content-type") || "";
+      return contentType.includes("json") ? response.json() : googleSheetRowsToPayload(await response.text());
+    }
 
+    async function loadRealtimeReports(force = false) {
+      setSyncStatus(force ? "Refreshing Sheets..." : "Connecting Sheets...", "warn");
       try {
-        const response = await fetch(`${realtimeConfig.url}?t=${Date.now()}`, { cache: "no-store" });
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        const payload = await response.json();
+        const payload = await fetchRealtimeSource(realtimeConfig.url);
         applyRealtimeReports(payload);
       } catch (error) {
-        setSyncStatus("Data sync pending", "warn");
+        if (location.protocol !== "file:" && realtimeConfig.fallbackUrl) {
+          try {
+            const fallbackPayload = await fetchRealtimeSource(realtimeConfig.fallbackUrl);
+            applyRealtimeReports(fallbackPayload);
+            setSyncStatus("Local data · Publish Dashboard_Data", "warn");
+            return;
+          } catch (fallbackError) {
+            // The Google Sheets message below is more useful than a second network error.
+          }
+        }
+        const accessError = /HTTP (401|403)/.test(String(error));
+        setSyncStatus(accessError ? "Publish Dashboard_Data" : "Sheets sync pending", "warn");
       }
     }
 
